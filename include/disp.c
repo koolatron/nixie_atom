@@ -39,17 +39,21 @@ void processDisplay(display_buf_t* buffer) {
         // even anodes, show a 7
         SHRSendByte(0x10);
     	SHRSendByte(0x00);
-        buffer->anode_even = ANODE_OFF;
-        buffer->anode_odd = ANODE_ON;
+//        buffer->anode_even = ANODE_OFF;
+//        buffer->anode_odd = ANODE_ON;
+        _setAnode(buffer, ANODE_EVEN, ANODE_OFF);
+        _setAnode(buffer, ANODE_ODD, ANODE_ON);
     	SHRLatch();
     } else {
         // odd anodes, show an 8
         SHRSendByte(0x21);
         SHRSendByte(0x11);
-        buffer->anode_even = ANODE_ON;
-        buffer->anode_odd = ANODE_OFF;
+//        buffer->anode_even = ANODE_ON;
+//        buffer->anode_odd = ANODE_OFF;
+        _setAnode(buffer, ANODE_EVEN, ANODE_ON);
+        _setAnode(buffer, ANODE_ODD, ANODE_OFF);
         SHRLatch();
-    }
+     }
 }
 
 void _sendBuffer(display_buf_t* buffer) {
