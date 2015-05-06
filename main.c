@@ -51,6 +51,11 @@ int main(void) {
 
     for (;;) {
         if (update) {
+
+            if (++i == 125) {
+                LEDs_ToggleLEDs(LEDS_LED1);
+                i = 0;
+            }
             processDisplay(&displayBuffer);
             update = 0;
         }

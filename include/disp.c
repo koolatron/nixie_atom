@@ -20,25 +20,36 @@ void initDisplay(display_buf_t* buffer) {
 }
 
 void processDisplay(display_buf_t* buffer) {
-	uint8_t anodeState = buffer->anode_even;
+//	uint8_t anodeState = buffer->anode_even;
 
 	// blank for ~200us
 	SHRClear();
 	_delay_us(200);
 
-	// anode on
-	if (anodeState == ANODE_ON) {
-		_setAnode(buffer, ANODE_ODD, ANODE_ON);
-	} else {
-		_setAnode(buffer, ANODE_EVEN, ANODE_ON);
-	}
-	_sendBuffer(buffer);
+// off until i've made sense of this, since it doesn't work.
+//	if (anodeState == ANODE_ON) {
+//		_setAnode(buffer, ANODE_ODD, ANODE_ON);
+//	} else {
+//		_setAnode(buffer, ANODE_EVEN, ANODE_ON);
+//	}
+//	_sendBuffer(buffer);
 
-	// ** test pattern follows
-	// even digits on, digit outputs set to 7
-	//SHRSendByte(0x10);
-	//SHRSendByte(0x00);
-	//SHRLatch();
+	// ** test pattern follows (working) **
+    if (buffer->anode_even == ANODE_ON) {
+        // even anodes, show a 7
+        SHRSendByte(0x10);
+    	SHRSendByte(0x00);
+        buffer->anode_even = ANODE_OFF;
+        buffer->anode_odd = ANODE_ON;
+    	SHRLatch();
+    } else {
+        // odd anodes, show an 8
+        SHRSendByte(0x21);
+        SHRSendByte(0x11);
+        buffer->anode_even = ANODE_ON;
+        buffer->anode_odd = ANODE_OFF;
+        SHRLatch();
+    }
 }
 
 void _sendBuffer(display_buf_t* buffer) {
