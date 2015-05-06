@@ -11,11 +11,11 @@ void initDisplay(display_buf_t* buffer) {
 	_setAnode(buffer, ANODE_ODD, ANODE_OFF);
 	_setAnode(buffer, ANODE_EVEN, ANODE_ON);
 	_setDigit(buffer, DIGIT_0, 0);
-	_setDigit(buffer, DIGIT_0, 0);
-	_setDigit(buffer, DIGIT_0, 0);
-	_setDigit(buffer, DIGIT_0, 0);
-	_setDigit(buffer, DIGIT_0, 0);
-	_setDigit(buffer, DIGIT_0, 0);
+	_setDigit(buffer, DIGIT_1, 0);
+	_setDigit(buffer, DIGIT_2, 0);
+	_setDigit(buffer, DIGIT_3, 0);
+	_setDigit(buffer, DIGIT_4, 0);
+	_setDigit(buffer, DIGIT_5, 0);
 	_sendBuffer(buffer);
 }
 
@@ -42,7 +42,7 @@ void processDisplay(display_buf_t* buffer) {
 }
 
 void _sendBuffer(display_buf_t* buffer) {
-	// Scramble digits, reverse bit chain, clock it out
+	// construct a bit buffer to clock out to the shift registers
 	uint8_t rawbits[2];
 	uint8_t i;
 
@@ -93,16 +93,22 @@ void _setDigit(display_buf_t* buffer, uint8_t digit, uint8_t value){
 	switch (digit) {
 		case DIGIT_0:
 			buffer->digit_0 = value;
+			break;
 		case DIGIT_1:
 			buffer->digit_1 = value;
+			break;
 		case DIGIT_2:
 			buffer->digit_2 = value;
+			break;
 		case DIGIT_3:
 			buffer->digit_3 = value;
+			break;
 		case DIGIT_4:
 			buffer->digit_4 = value;
+			break;
 		case DIGIT_5:
 			buffer->digit_5 = value;
+			break;
 		default:
 			break;
 	}
