@@ -8,57 +8,54 @@
 
 void initDisplay(display_buf_t* buffer) {
 	SHRClear();
-	_setAnode(buffer, ANODE_ODD, ANODE_OFF);
+    _delay_us(200);
+    _setAnode(buffer, ANODE_ODD, ANODE_OFF);
 	_setAnode(buffer, ANODE_EVEN, ANODE_ON);
-	_setDigit(buffer, DIGIT_0, 0);
-	_setDigit(buffer, DIGIT_1, 0);
-	_setDigit(buffer, DIGIT_2, 0);
-	_setDigit(buffer, DIGIT_3, 0);
-	_setDigit(buffer, DIGIT_4, 0);
-	_setDigit(buffer, DIGIT_5, 0);
+	_setDigit(buffer, DIGIT_0, 0x00);
+	_setDigit(buffer, DIGIT_1, 0x00);
+	_setDigit(buffer, DIGIT_2, 0x00);
+	_setDigit(buffer, DIGIT_3, 0x00);
+	_setDigit(buffer, DIGIT_4, 0x00);
+	_setDigit(buffer, DIGIT_5, 0x00);
 	_sendBuffer(buffer);
 }
 
 void processDisplay(display_buf_t* buffer) {
-//	uint8_t anodeState = buffer->anode_even;
-
 	// blank for ~200us
 	SHRClear();
 	_delay_us(200);
 
-// off until i've made sense of this, since it doesn't work.
-//	if (anodeState == ANODE_ON) {
-//		_setAnode(buffer, ANODE_ODD, ANODE_ON);
-//	} else {
-//		_setAnode(buffer, ANODE_EVEN, ANODE_ON);
-//	}
-//	_sendBuffer(buffer);
-
-	// ** test pattern follows (working) **
     if (buffer->anode_even == ANODE_ON) {
-        // even anodes, show a 7
-        SHRSendByte(0x10);
-    	SHRSendByte(0x00);
-//        buffer->anode_even = ANODE_OFF;
-//        buffer->anode_odd = ANODE_ON;
-        _setAnode(buffer, ANODE_EVEN, ANODE_OFF);
         _setAnode(buffer, ANODE_ODD, ANODE_ON);
-    	SHRLatch();
+        _setAnode(buffer, ANODE_EVEN, ANODE_OFF);
     } else {
-        // odd anodes, show an 8
-        SHRSendByte(0x21);
-        SHRSendByte(0x11);
-//        buffer->anode_even = ANODE_ON;
-//        buffer->anode_odd = ANODE_OFF;
-        _setAnode(buffer, ANODE_EVEN, ANODE_ON);
         _setAnode(buffer, ANODE_ODD, ANODE_OFF);
-        SHRLatch();
-     }
+        _setAnode(buffer, ANODE_EVEN, ANODE_ON);
+    }
+    _sendBuffer(buffer);
+
+//	// ** test pattern follows (working) **
+//    if (buffer->anode_even == ANODE_ON) {
+//        // even anodes, show a 7
+//        SHRSendByte(0x10);
+//        SHRSendByte(0x00);
+//        _setAnode(buffer, ANODE_EVEN, ANODE_OFF);
+//        _setAnode(buffer, ANODE_ODD, ANODE_ON);
+//    	SHRLatch();
+//    } else {
+//        // odd anodes, show an 8
+//        SHRSendByte(0x21);
+//        SHRSendByte(0x11);
+//        _setAnode(buffer, ANODE_EVEN, ANODE_ON);
+//        _setAnode(buffer, ANODE_ODD, ANODE_OFF);
+//        SHRLatch();
+//     }
 }
 
 void _sendBuffer(display_buf_t* buffer) {
 	// construct a bit buffer to clock out to the shift registers
 	uint8_t rawbits[2];
+    uint8_t rawbits_reversed[2];
 	uint8_t i;
 
 	if (buffer->anode_even == ANODE_ON) {
@@ -69,8 +66,7 @@ void _sendBuffer(display_buf_t* buffer) {
 		rawbits[0] |= ((_scrambleDigit(buffer->digit_0)) << 4);
 		rawbits[0] |= _scrambleDigit(buffer->digit_2);
 		rawbits[1] |= ((_scrambleDigit(buffer->digit_4)) << 4);
-	}
-	if (buffer->anode_odd == ANODE_ON) {
+	} else {
 		// set anode bit
 		rawbits[1] |= 0x04;
 
@@ -82,12 +78,12 @@ void _sendBuffer(display_buf_t* buffer) {
 
 	// reverse the bits so they're in the right order to clock out
 	for (i=0; i<8; i++) {
-		rawbits[0] |= ((rawbits[0] >> i) & 1) << (7-i);
-		rawbits[1] |= ((rawbits[1] >> i) & 1) << (7-i);
+		rawbits_reversed[0] |= ((rawbits[0] >> i) & 1) << (7-i);
+		rawbits_reversed[1] |= ((rawbits[1] >> i) & 1) << (7-i);
 	}
 
-	SHRSendByte(rawbits[1]);
-	SHRSendByte(rawbits[0]);
+	SHRSendByte(rawbits_reversed[1]);
+	SHRSendByte(rawbits_reversed[0]);
 	SHRLatch();
 }
 
@@ -129,29 +125,30 @@ void _setDigit(display_buf_t* buffer, uint8_t digit, uint8_t value){
 	}
 }
 
+// TODO: do this with a LUT and not a function
 uint8_t _scrambleDigit(uint8_t digit) {
 	switch (digit) {
-		case 0:
-			return 3;
-		case 1:
-			return 8;
-		case 2:
-			return 9;
-		case 3:
-			return 5;
-		case 4:
-			return 4;
-		case 5:
-			return 6;
-		case 6:
-			return 7;
-		case 7:
-			return 0;
-		case 8:
-			return 1;
-		case 9:
-			return 2;
+		case 0x00:
+			return 0x0c;
+		case 0x01:
+			return 0x01;
+		case 0x02:
+			return 0x09;
+		case 0x03:
+			return 0x0a;
+		case 0x04:
+			return 0x02;
+		case 0x05:
+			return 0x06;
+		case 0x06:
+			return 0x0e;
+		case 0x07:
+			return 0x00;
+		case 0x08:
+			return 0x08;
+		case 0x09:
+			return 0x04;
 		default:
-			return 0;
+			return 0x00;
 	}
 }

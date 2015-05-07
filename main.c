@@ -42,16 +42,8 @@ int main(void) {
 
     GlobalInterruptEnable();
 
-//    displayBuffer->digit_0 = 0;
-//    displayBuffer->digit_1 = 1;
-//    displayBuffer->digit_2 = 2;
-//    displayBuffer->digit_3 = 3;
-//    displayBuffer->digit_4 = 4;
-//    displayBuffer->digit_5 = 5;
-
     for (;;) {
         if (update) {
-
             if (++i == 125) {
                 LEDs_ToggleLEDs(LEDS_LED1);
                 i = 0;
