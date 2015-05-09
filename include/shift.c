@@ -40,6 +40,7 @@ void SHRSendByte(unsigned char byte) {
 		asm("nop");
 	}
 
+    SHR_PORT &= ~DATA;
 	SHR_PORT &= ~CLOCK;
 	asm("nop");
 }

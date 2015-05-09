@@ -54,8 +54,8 @@ void processDisplay(display_buf_t* buffer) {
 
 void _sendBuffer(display_buf_t* buffer) {
 	// construct a bit buffer to clock out to the shift registers
-	uint8_t rawbits[2];
-    uint8_t rawbits_reversed[2];
+	uint8_t rawbits[2] = {0x00, 0x00};
+    uint8_t rawbits_reversed[2] = {0x00, 0x00};
 	uint8_t i;
 
 	if (buffer->anode_even == ANODE_ON) {
@@ -82,6 +82,7 @@ void _sendBuffer(display_buf_t* buffer) {
 		rawbits_reversed[1] |= ((rawbits[1] >> i) & 1) << (7-i);
 	}
 
+    // clock out the buffer we built up
 	SHRSendByte(rawbits_reversed[1]);
 	SHRSendByte(rawbits_reversed[0]);
 	SHRLatch();

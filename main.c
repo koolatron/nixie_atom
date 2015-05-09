@@ -29,9 +29,11 @@ USB_ClassInfo_CDC_Device_t VirtualSerial_CDC_Interface =
 uint32_t Boot_Key ATTR_NO_INIT;
 
 static FILE USBSerialStream;
-display_buf_t displayBuffer;
+static time_t time;
+static display_buf_t displayBuffer;
 
-uint8_t i;
+uint8_t i, j, k;
+
 volatile uint8_t update;
 
 int main(void) {
@@ -44,10 +46,18 @@ int main(void) {
 
     for (;;) {
         if (update) {
-            if (++i == 125) {
+            if ((time.ticks % 125) == 0) {
                 LEDs_ToggleLEDs(LEDS_LED1);
-                i = 0;
+//                j++;
+//                j %= 10;
+                j = (time.seconds % 10);
+                k = (time.seconds - j) / 10;
             }
+
+            _setDigit(&displayBuffer, DIGIT_0, k);
+            _setDigit(&displayBuffer, DIGIT_1, j);
+
+            processTime(&time);
             processDisplay(&displayBuffer);
             update = 0;
         }
@@ -73,6 +83,7 @@ void SetupHardware(void)
     LEDs_Init();
     initSHR();
     initDisplay(&displayBuffer);
+    initTime(&time);
 
     /* Initialize timer0 */
     /* This sets up a timer interrupt at 250Hz to signal display service */

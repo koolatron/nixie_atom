@@ -9,6 +9,7 @@
 
 #include "include/shift.h"
 #include "include/disp.h"
+#include "include/time.h"
 
 #include <LUFA/Drivers/Board/LEDs.h>
 #include <LUFA/Drivers/Board/Buttons.h>
