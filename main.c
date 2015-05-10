@@ -32,7 +32,8 @@ static FILE USBSerialStream;
 static time_t time;
 static display_buf_t displayBuffer;
 
-uint8_t i, j, k;
+uint8_t j, k;
+uint8_t b1, b2, b3;
 
 volatile uint8_t update;
 
@@ -48,14 +49,21 @@ int main(void) {
         if (update) {
             if ((time.ticks % 125) == 0) {
                 LEDs_ToggleLEDs(LEDS_LED1);
-//                j++;
-//                j %= 10;
                 j = (time.seconds % 10);
                 k = (time.seconds - j) / 10;
             }
 
             _setDigit(&displayBuffer, DIGIT_0, k);
             _setDigit(&displayBuffer, DIGIT_1, j);
+            _setDigit(&displayBuffer, DIGIT_2, k);
+            _setDigit(&displayBuffer, DIGIT_3, j);
+
+            if (Buttons_GetStatus() & BUTTONS_BUTTON1)
+                b1++;
+            if (Buttons_GetStatus() & BUTTONS_BUTTON2)
+                b2++;
+            if (Buttons_GetStatus() & BUTTONS_BUTTON3)
+                b3++;
 
             processTime(&time);
             processDisplay(&displayBuffer);
@@ -78,7 +86,7 @@ void SetupHardware(void)
     clock_prescale_set(clock_div_1);
 
     /* Hardware Initialization */
-    //Buttons_Init();
+    Buttons_Init();
     //USB_Init();
     LEDs_Init();
     initSHR();
@@ -91,6 +99,9 @@ void SetupHardware(void)
     TCCR0A |= (1 << WGM01);                  // CTC mode
     TIMSK0 |= (1 << OCIE0A);                 // Enable interrupt generation on OCR0A match
     TCCR0B |= (1 << CS02);                   // F/256 prescaler; start timer
+
+    /* Initialize PCINT */
+    /* This sets up a pin-change interrupt to catch the 1PPS output of our rubidium source */
 }
 
 ISR(TIMER0_COMPA_vect) {
