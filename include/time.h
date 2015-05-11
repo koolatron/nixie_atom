@@ -15,7 +15,7 @@ typedef struct {
 	uint8_t hour_mode;
 } time_buf_t;
 
-void initTime(time_t* time);
-void processTime(time_t* time);
+void initTime(time_buf_t* time);
+void processTime(time_buf_t* time);
 
 #endif

@@ -1,6 +1,6 @@
 #include "time.h"
 
-void initTime(time_t* time) {
+void initTime(time_buf_t* time) {
     time->ticks = 0;
     time->seconds = 0;
     time->minutes = 0;
@@ -8,7 +8,7 @@ void initTime(time_t* time) {
     time->hour_mode = HOUR_MODE_24;
 }
 
-void processTime(time_t* time) {
+void processTime(time_buf_t* time) {
 	time->ticks++;
 
 	if (time->ticks >= TICKS_PER_SEC) {
