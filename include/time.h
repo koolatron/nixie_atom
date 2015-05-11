@@ -13,7 +13,7 @@ typedef struct {
 	uint8_t seconds;
 	uint8_t ticks;
 	uint8_t hour_mode;
-} time_t;
+} time_buf_t;
 
 void initTime(time_t* time);
 void processTime(time_t* time);

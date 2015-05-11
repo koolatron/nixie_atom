@@ -28,8 +28,8 @@ USB_ClassInfo_CDC_Device_t VirtualSerial_CDC_Interface =
 
 uint32_t Boot_Key ATTR_NO_INIT;
 
-static FILE USBSerialStream;
-static time_t time;
+//static FILE USBSerialStream;
+static time_buf_t timeBuffer;
 static display_buf_t displayBuffer;
 
 uint8_t j, k;
@@ -47,26 +47,25 @@ int main(void) {
 
     for (;;) {
         if (update) {
-            if ((time.ticks % 125) == 0) {
+            if ((timeBuffer.ticks % 125) == 0) {
                 LEDs_ToggleLEDs(LEDS_LED1);
-                j = (time.seconds % 10);
-                k = (time.seconds - j) / 10;
+
+                // j,k show ones and tens of seconds as a digit test
+                j = (timeBuffer.seconds % 10);
+                k = (timeBuffer.seconds - j) / 10;
             }
 
             _setDigit(&displayBuffer, DIGIT_0, k);
             _setDigit(&displayBuffer, DIGIT_1, j);
             _setDigit(&displayBuffer, DIGIT_2, k);
             _setDigit(&displayBuffer, DIGIT_3, j);
+            _setDigit(&displayBuffer, DIGIT_4, k);
+            _setDigit(&displayBuffer, DIGIT_5, j);
 
-            if (Buttons_GetStatus() & BUTTONS_BUTTON1)
-                b1++;
-            if (Buttons_GetStatus() & BUTTONS_BUTTON2)
-                b2++;
-            if (Buttons_GetStatus() & BUTTONS_BUTTON3)
-                b3++;
-
-            processTime(&time);
+            processTime(&timeBuffer);
             processDisplay(&displayBuffer);
+
+            // clear update flag
             update = 0;
         }
 
@@ -86,26 +85,34 @@ void SetupHardware(void)
     clock_prescale_set(clock_div_1);
 
     /* Hardware Initialization */
-    Buttons_Init();
     //USB_Init();
+    Buttons_Init();
     LEDs_Init();
     initSHR();
     initDisplay(&displayBuffer);
-    initTime(&time);
+    initTime(&timeBuffer);
 
     /* Initialize timer0 */
     /* This sets up a timer interrupt at 250Hz to signal display service */
-    OCR0A   = 249;                           // Top count; timer0 interrupt rate = 16MHz / (256 * (OCR0A + 1))
-    TCCR0A |= (1 << WGM01);                  // CTC mode
-    TIMSK0 |= (1 << OCIE0A);                 // Enable interrupt generation on OCR0A match
-    TCCR0B |= (1 << CS02);                   // F/256 prescaler; start timer
+    OCR0A   = 249;                            // Top count; timer0 interrupt rate = 16MHz / (256 * (OCR0A + 1))
+    TCCR0A |=  (1 << WGM01);                  // CTC mode
+    TIMSK0 |=  (1 << OCIE0A);                 // Enable interrupt generation on OCR0A match
+    TCCR0B |=  (1 << CS02);                   // F/256 prescaler; start timer
 
     /* Initialize PCINT */
     /* This sets up a pin-change interrupt to catch the 1PPS output of our rubidium source */
+    PINC   &= ~(1 << PC2);                    // PORTC[2] is an input
+//    PORTC  &= ~(1 << PC2);                    // Weak pullups on PORTC[2] disabled
+    PORTC  |=  (1 << PC2);                    // Weak pullup on PORTC[2] on (for now)
+    PCMSK1 |=  (1 << PCINT11);                // Enable PCINT11 interrupt
+    PCICR  |=  (1 << PCIE1);                  // Enable PCI1 interrupt generation on pin state change
 }
 
 ISR(TIMER0_COMPA_vect) {
     update = 1;
+}
+
+ISR(PCINT1_vect) {
 }
 
 /** Event handler for the library USB Connection event. */
