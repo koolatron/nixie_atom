@@ -1,79 +1,96 @@
-#include <stdint.h>
-#include <avr/io.h>
-#include <avr/sfr_defs.h>
-#include <util/delay.h>
-
 #include "disp.h"
-#include "shift.h"
 
-void initDisplay(display_buf_t* buffer) {
+void initDisplay(display_buf_t* display) {
 	SHRClear();
     _delay_us(200);
-    _setAnode(buffer, ANODE_ODD, ANODE_OFF);
-	_setAnode(buffer, ANODE_EVEN, ANODE_ON);
-	_setDigit(buffer, DIGIT_0, 0x00);
-	_setDigit(buffer, DIGIT_1, 0x00);
-	_setDigit(buffer, DIGIT_2, 0x00);
-	_setDigit(buffer, DIGIT_3, 0x00);
-	_setDigit(buffer, DIGIT_4, 0x00);
-	_setDigit(buffer, DIGIT_5, 0x00);
-	_sendBuffer(buffer);
+    _setAnode(display, ANODE_ODD, ANODE_OFF);
+	_setAnode(display, ANODE_EVEN, ANODE_ON);
+	_setDigit(display, DIGIT_0, 0x00);
+	_setDigit(display, DIGIT_1, 0x00);
+	_setDigit(display, DIGIT_2, 0x00);
+	_setDigit(display, DIGIT_3, 0x00);
+	_setDigit(display, DIGIT_4, 0x00);
+	_setDigit(display, DIGIT_5, 0x00);
+	_sendBuffer(display);
 }
 
-void processDisplay(display_buf_t* buffer) {
+void processDisplay(display_buf_t* display) {
 	// blank for ~200us
 	SHRClear();
 	_delay_us(200);
 
-    if (buffer->anode_even == ANODE_ON) {
-        _setAnode(buffer, ANODE_ODD, ANODE_ON);
-        _setAnode(buffer, ANODE_EVEN, ANODE_OFF);
+    if (display->anode_even == ANODE_ON) {
+        _setAnode(display, ANODE_ODD, ANODE_ON);
+        _setAnode(display, ANODE_EVEN, ANODE_OFF);
     } else {
-        _setAnode(buffer, ANODE_ODD, ANODE_OFF);
-        _setAnode(buffer, ANODE_EVEN, ANODE_ON);
+        _setAnode(display, ANODE_ODD, ANODE_OFF);
+        _setAnode(display, ANODE_EVEN, ANODE_ON);
     }
-    _sendBuffer(buffer);
+    _sendBuffer(display);
 
-//	// ** test pattern follows (working) **
-//    if (buffer->anode_even == ANODE_ON) {
+//	// ** raw test pattern follows **
+//    if (display->anode_even == ANODE_ON) {
 //        // even anodes, show a 7
 //        SHRSendByte(0x10);
 //        SHRSendByte(0x00);
-//        _setAnode(buffer, ANODE_EVEN, ANODE_OFF);
-//        _setAnode(buffer, ANODE_ODD, ANODE_ON);
+//        _setAnode(display, ANODE_EVEN, ANODE_OFF);
+//        _setAnode(display, ANODE_ODD, ANODE_ON);
 //    	SHRLatch();
 //    } else {
 //        // odd anodes, show an 8
 //        SHRSendByte(0x21);
 //        SHRSendByte(0x11);
-//        _setAnode(buffer, ANODE_EVEN, ANODE_ON);
-//        _setAnode(buffer, ANODE_ODD, ANODE_OFF);
+//        _setAnode(display, ANODE_EVEN, ANODE_ON);
+//        _setAnode(display, ANODE_ODD, ANODE_OFF);
 //        SHRLatch();
 //     }
 }
 
-void _sendBuffer(display_buf_t* buffer) {
+void displayTime(display_buf_t* display, time_buf_t* time) {
+	uint8_t tens, ones;
+
+	ones = (time->seconds % 10);
+	tens = (time->seconds - ones) / 10;
+
+	_setDigit(display, DIGIT_0, ones);
+	_setDigit(display, DIGIT_1, tens);
+
+	ones = (time->minutes % 10);
+	tens = (time->minutes - ones) / 10;
+
+	_setDigit(display, DIGIT_2, ones);
+	_setDigit(display, DIGIT_3, tens);
+
+	ones = (time->hours % 10);
+	tens = (time->hours - ones) / 10;
+
+	_setDigit(display, DIGIT_4, ones);
+	_setDigit(display, DIGIT_5, tens);
+}
+
+// TODO: optimize this so reversing isn't necessary
+void _sendBuffer(display_buf_t* display) {
 	// construct a bit buffer to clock out to the shift registers
 	uint8_t rawbits[2] = {0x00, 0x00};
     uint8_t rawbits_reversed[2] = {0x00, 0x00};
 	uint8_t i;
 
-	if (buffer->anode_even == ANODE_ON) {
+	if (display->anode_even == ANODE_ON) {
 		// set anode bit
 		rawbits[1] |= 0x08;
 
 		// set digit driver inputs
-		rawbits[0] |= ((_scrambleDigit(buffer->digit_0)) << 4);
-		rawbits[0] |= _scrambleDigit(buffer->digit_2);
-		rawbits[1] |= ((_scrambleDigit(buffer->digit_4)) << 4);
+		rawbits[0] |= ((_scrambleDigit(display->digit_0)) << 4);
+		rawbits[0] |= _scrambleDigit(display->digit_2);
+		rawbits[1] |= ((_scrambleDigit(display->digit_4)) << 4);
 	} else {
 		// set anode bit
 		rawbits[1] |= 0x04;
 
 		// set digit driver inputs
-		rawbits[0] |= ((_scrambleDigit(buffer->digit_1)) << 4);
-		rawbits[0] |= _scrambleDigit(buffer->digit_3);
-		rawbits[1] |= ((_scrambleDigit(buffer->digit_5)) << 4);
+		rawbits[0] |= ((_scrambleDigit(display->digit_1)) << 4);
+		rawbits[0] |= _scrambleDigit(display->digit_3);
+		rawbits[1] |= ((_scrambleDigit(display->digit_5)) << 4);
 	}
 
 	// reverse the bits so they're in the right order to clock out
@@ -88,38 +105,40 @@ void _sendBuffer(display_buf_t* buffer) {
 	SHRLatch();
 }
 
-void _setAnode(display_buf_t* buffer, uint8_t anode, uint8_t value) {
+// TODO: inline?
+void _setAnode(display_buf_t* display, uint8_t anode, uint8_t value) {
 	switch (anode) {
 		case ANODE_EVEN:
-			buffer->anode_even = value;
+			display->anode_even = value;
 			break;
 		case ANODE_ODD:
-			buffer->anode_odd = value;
+			display->anode_odd = value;
 			break;
 		default:
 			break;
 	}
 }
 
-void _setDigit(display_buf_t* buffer, uint8_t digit, uint8_t value){
+// TODO: inline?
+void _setDigit(display_buf_t* display, uint8_t digit, uint8_t value){
 	switch (digit) {
 		case DIGIT_0:
-			buffer->digit_0 = value;
+			display->digit_0 = value;
 			break;
 		case DIGIT_1:
-			buffer->digit_1 = value;
+			display->digit_1 = value;
 			break;
 		case DIGIT_2:
-			buffer->digit_2 = value;
+			display->digit_2 = value;
 			break;
 		case DIGIT_3:
-			buffer->digit_3 = value;
+			display->digit_3 = value;
 			break;
 		case DIGIT_4:
-			buffer->digit_4 = value;
+			display->digit_4 = value;
 			break;
 		case DIGIT_5:
-			buffer->digit_5 = value;
+			display->digit_5 = value;
 			break;
 		default:
 			break;
@@ -150,6 +169,7 @@ uint8_t _scrambleDigit(uint8_t digit) {
 		case 0x09:
 			return 0x04;
 		default:
+			// return out-of-range code?
 			return 0x00;
 	}
 }

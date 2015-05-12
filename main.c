@@ -32,7 +32,6 @@ uint32_t Boot_Key ATTR_NO_INIT;
 static time_buf_t timeBuffer;
 static display_buf_t displayBuffer;
 
-uint8_t j, k;
 uint8_t b1, b2, b3;
 
 volatile uint8_t update;
@@ -49,20 +48,10 @@ int main(void) {
         if (update) {
             if ((timeBuffer.ticks % 125) == 0) {
                 LEDs_ToggleLEDs(LEDS_LED1);
-
-                // j,k show ones and tens of seconds as a digit test
-                j = (timeBuffer.seconds % 10);
-                k = (timeBuffer.seconds - j) / 10;
             }
 
-            _setDigit(&displayBuffer, DIGIT_0, k);
-            _setDigit(&displayBuffer, DIGIT_1, j);
-            _setDigit(&displayBuffer, DIGIT_2, k);
-            _setDigit(&displayBuffer, DIGIT_3, j);
-            _setDigit(&displayBuffer, DIGIT_4, k);
-            _setDigit(&displayBuffer, DIGIT_5, j);
-
             processTime(&timeBuffer);
+            displayTime(&displayBuffer, &timeBuffer);
             processDisplay(&displayBuffer);
 
             // clear update flag

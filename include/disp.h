@@ -2,6 +2,17 @@
   * disp.h - display handling for nixie clock
   * Abstracts muxing, mangling, and clocking tasks
   */
+#ifndef _DISP_H_
+#define _DISP_H_
+
+#include <stdint.h>
+#include <avr/io.h>
+#include <avr/sfr_defs.h>
+#include <util/delay.h>
+
+#include "time.h"
+#include "disp.h"
+#include "shift.h"
 
 #define ANODE_EVEN		0
 #define ANODE_ODD		1
@@ -26,9 +37,12 @@ typedef struct {
 	uint8_t anode_odd;
 } display_buf_t;
 
-void processDisplay(display_buf_t* buffer);
-void initDisplay(display_buf_t* buffer);
-void _sendBuffer(display_buf_t* buffer);
-void _setAnode(display_buf_t* buffer, uint8_t anode, uint8_t value);
-void _setDigit(display_buf_t* buffer, uint8_t digit, uint8_t value);
+void processDisplay(display_buf_t* display);
+void initDisplay(display_buf_t* display);
+void displayTime(display_buf_t* display, time_buf_t* time);
+void _sendBuffer(display_buf_t* display);
+void _setAnode(display_buf_t* display, uint8_t anode, uint8_t value);
+void _setDigit(display_buf_t* display, uint8_t digit, uint8_t value);
 uint8_t _scrambleDigit(uint8_t digit);
+
+#endif
