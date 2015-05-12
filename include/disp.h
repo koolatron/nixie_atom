@@ -11,7 +11,6 @@
 #include <util/delay.h>
 
 #include "time.h"
-#include "disp.h"
 #include "shift.h"
 
 #define ANODE_EVEN		0
@@ -39,6 +38,7 @@ typedef struct {
 
 void processDisplay(display_buf_t* display);
 void initDisplay(display_buf_t* display);
+void displayDigits(display_buf_t* display, uint8_t* digits);
 void displayTime(display_buf_t* display, time_buf_t* time);
 void _sendBuffer(display_buf_t* display);
 void _setAnode(display_buf_t* display, uint8_t anode, uint8_t value);

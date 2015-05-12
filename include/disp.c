@@ -46,6 +46,15 @@ void processDisplay(display_buf_t* display) {
 //     }
 }
 
+// Just display some bytes
+void displayDigits(display_buf_t* display, uint8_t* digits) {
+	uint8_t i;
+
+	for(i=0; i<6; i++) {
+		_setDigit(display, i, digits[i]);
+	}
+}
+
 void displayTime(display_buf_t* display, time_buf_t* time) {
 	uint8_t tens, ones;
 
