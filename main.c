@@ -50,6 +50,7 @@ int main(void) {
                 LEDs_ToggleLEDs(LEDS_LED1);
             }
 
+            processButtons();
             processTime(&timeBuffer);
             displayTime(&displayBuffer, &timeBuffer);
             processDisplay(&displayBuffer);
@@ -91,10 +92,28 @@ void SetupHardware(void)
     /* Initialize PCINT */
     /* This sets up a pin-change interrupt to catch the 1PPS output of our rubidium source */
     PINC   &= ~(1 << PC2);                    // PORTC[2] is an input
-//    PORTC  &= ~(1 << PC2);                    // Weak pullups on PORTC[2] disabled
+//  PORTC  &= ~(1 << PC2);                    // Weak pullups on PORTC[2] disabled
     PORTC  |=  (1 << PC2);                    // Weak pullup on PORTC[2] on (for now)
     PCMSK1 |=  (1 << PCINT11);                // Enable PCINT11 interrupt
     PCICR  |=  (1 << PCIE1);                  // Enable PCI1 interrupt generation on pin state change
+}
+
+void processButtons(void) {
+    uint8_t button_status = Buttons_GetStatus();
+
+    if (button_status & BUTTONS_BUTTON1) {
+        if (b1 == BUTTON_ON) {
+            b1 = BUTTON_OFF;
+        } else {
+            b1++;
+        }
+    }
+
+    if (button_status & BUTTONS_BUTTON2) {
+    }
+
+    if (button_status & BUTTONS_BUTTON3) {
+    }
 }
 
 ISR(TIMER0_COMPA_vect) {
@@ -102,6 +121,7 @@ ISR(TIMER0_COMPA_vect) {
 }
 
 ISR(PCINT1_vect) {
+    LEDs_ToggleLEDs(LEDS_LED2);
 }
 
 /** Event handler for the library USB Connection event. */

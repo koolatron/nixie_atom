@@ -61,20 +61,20 @@ void displayTime(display_buf_t* display, time_buf_t* time) {
 	ones = (time->seconds % 10);
 	tens = (time->seconds - ones) / 10;
 
-	_setDigit(display, DIGIT_0, ones);
-	_setDigit(display, DIGIT_1, tens);
+	_setDigit(display, DIGIT_5, ones);
+	_setDigit(display, DIGIT_4, tens);
 
 	ones = (time->minutes % 10);
 	tens = (time->minutes - ones) / 10;
 
-	_setDigit(display, DIGIT_2, ones);
-	_setDigit(display, DIGIT_3, tens);
+	_setDigit(display, DIGIT_3, ones);
+	_setDigit(display, DIGIT_2, tens);
 
 	ones = (time->hours % 10);
 	tens = (time->hours - ones) / 10;
 
-	_setDigit(display, DIGIT_4, ones);
-	_setDigit(display, DIGIT_5, tens);
+	_setDigit(display, DIGIT_1, ones);
+	_setDigit(display, DIGIT_0, tens);
 }
 
 // TODO: optimize this so reversing isn't necessary

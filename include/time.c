@@ -6,9 +6,14 @@ void initTime(time_buf_t* time) {
     time->minutes = 0;
     time->hours = 0;
     time->hour_mode = HOUR_MODE_24;
+    time->count_en = COUNT_ENABLED;
+    time->count_dir = COUNT_UP;
 }
 
 void processTime(time_buf_t* time) {
+    if (time->count_en == COUNT_DISABLED)
+        return;
+
 	time->ticks++;
 
 	if (time->ticks >= TICKS_PER_SEC) {
