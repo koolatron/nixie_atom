@@ -30,11 +30,15 @@ uint32_t Boot_Key ATTR_NO_INIT;
 
 //static FILE USBSerialStream;
 static time_buf_t timeBuffer;
+static time_buf_t countdownBuffer;
+static time_buf_t *timePtr;
 static display_buf_t displayBuffer;
 
 uint8_t b1, b2, b3;
+uint8_t state;
 
-volatile uint8_t update;
+volatile uint8_t serviceUpdate;
+volatile uint8_t timeUpdate;
 
 int main(void) {
     SetupHardware();
@@ -44,19 +48,43 @@ int main(void) {
 
     GlobalInterruptEnable();
 
+    timePtr = &timeBuffer;
+
+    timePtr->hours = 12;
+    timePtr->minutes = 34;
+    timePtr->seconds = 56;
+
+    state = STATE_CLOCK;
+
     for (;;) {
-        if (update) {
+        if (serviceUpdate) {
+            // clear update flag
+            serviceUpdate = 0;
+
             if ((timeBuffer.ticks % 125) == 0) {
                 LEDs_ToggleLEDs(LEDS_LED1);
             }
 
-            processButtons();
-            processTime(&timeBuffer);
-            displayTime(&displayBuffer, &timeBuffer);
-            processDisplay(&displayBuffer);
+            // cheezy time set
+            if (b1 == BUTTON_ON) {
+                timePtr->minutes++;
+                timePtr->seconds = 0;
+            }
+            if (b2 == BUTTON_ON) {
+                timePtr->hours++;
+            }
 
+            processButtons();
+            processTime(timePtr);
+            displayTime(&displayBuffer, timePtr);
+            processDisplay(&displayBuffer);
+        }
+
+        // Only update state on second edge of PCINT
+        if (timeUpdate > 1) {
             // clear update flag
-            update = 0;
+            timeUpdate = 0;
+            LEDs_ToggleLEDs(LEDS_LED2);
         }
 
         //CDC_Device_USBTask(&VirtualSerial_CDC_Interface);
@@ -92,8 +120,7 @@ void SetupHardware(void)
     /* Initialize PCINT */
     /* This sets up a pin-change interrupt to catch the 1PPS output of our rubidium source */
     PINC   &= ~(1 << PC2);                    // PORTC[2] is an input
-//  PORTC  &= ~(1 << PC2);                    // Weak pullups on PORTC[2] disabled
-    PORTC  |=  (1 << PC2);                    // Weak pullup on PORTC[2] on (for now)
+    PORTC  &= ~(1 << PC2);                    // Weak pullup on PORTC[2] disabled
     PCMSK1 |=  (1 << PCINT11);                // Enable PCINT11 interrupt
     PCICR  |=  (1 << PCIE1);                  // Enable PCI1 interrupt generation on pin state change
 }
@@ -102,7 +129,7 @@ void processButtons(void) {
     uint8_t button_status = Buttons_GetStatus();
 
     if (button_status & BUTTONS_BUTTON1) {
-        if (b1 == BUTTON_ON) {
+        if (b1 > BUTTON_ON) {
             b1 = BUTTON_OFF;
         } else {
             b1++;
@@ -110,18 +137,33 @@ void processButtons(void) {
     }
 
     if (button_status & BUTTONS_BUTTON2) {
+        if (b2 > BUTTON_ON) {
+            b2 = BUTTON_OFF;
+        } else {
+            b2++;
+        }
     }
 
     if (button_status & BUTTONS_BUTTON3) {
+        if (b3 > BUTTON_ON) {
+            b3 = BUTTON_OFF;
+        } else {
+            b3++;
+        }
     }
 }
 
+// Business logic
+void processState(void) {
+    // TODO: draw state diagram
+}
+
 ISR(TIMER0_COMPA_vect) {
-    update = 1;
+    serviceUpdate = 1;
 }
 
 ISR(PCINT1_vect) {
-    LEDs_ToggleLEDs(LEDS_LED2);
+    timeUpdate++;
 }
 
 /** Event handler for the library USB Connection event. */

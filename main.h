@@ -26,8 +26,13 @@
 #define LEDMASK_USB_ERROR           LEDS_ALL_LEDS
 #define LEDMASK_USB_READY           LEDS_LED1
 
-/** Debouncing threshholds for buttons; multiply by 4ms
- */
+#define STATE_CLOCK                 0
+#define STATE_CLOCK_SET             1
+#define STATE_COUNTDOWN             2
+#define STATE_COUNTDOWN_SET         3
+#define STATE_COUNTDOWN_OVER        4
+#define STATE_SLOTMACHINE           5
+
 #define BUTTON_ON                   25
 #define BUTTON_OFF                  0
 
