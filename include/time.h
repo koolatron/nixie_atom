@@ -3,6 +3,9 @@
 
 #include <stdint.h>
 
+// Comment out to use internal clock source
+#define CLOCK_SOURCE_EXT
+
 #define TICKS_PER_SEC 	250
 #define HOUR_MODE_12	0
 #define HOUR_MODE_24 	1
@@ -23,8 +26,12 @@ typedef struct {
 
 void initTime(time_buf_t* time);
 void processTime(time_buf_t* time);
+void tick(time_buf_t* time);
 void setHours(time_buf_t* time, uint8_t hours);
 void setMinutes(time_buf_t* time, uint8_t minutes);
 void setSeconds(time_buf_t* time, uint8_t seconds);
+void enableCount(time_buf_t* time);
+void disableCount(time_buf_t* time);
+void setCountDir(time_buf_t* time, uint8_t dir);
 
 #endif

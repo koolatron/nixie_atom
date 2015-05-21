@@ -37,6 +37,8 @@
 #define BUTTON_OFF                  0
 
 void processButtons(void);
+void processState(void);
+inline uint8_t isLocked(void);
 
 /** The ATTR_INIT_SECTION(3) decoration causes gcc to place this function in the .init3 section,
  *  which runs before main but after the stack is initialized.

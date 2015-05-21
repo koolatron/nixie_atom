@@ -38,7 +38,7 @@ uint8_t b1, b2, b3;
 uint8_t state;
 
 volatile uint8_t serviceUpdate;
-volatile uint8_t timeUpdate;
+volatile uint8_t timeUpdate, edges;
 
 int main(void) {
     SetupHardware();
@@ -50,13 +50,14 @@ int main(void) {
 
     timePtr = &timeBuffer;
 
-    timePtr->hours = 12;
-    timePtr->minutes = 34;
-    timePtr->seconds = 56;
+    timePtr->hours   = 00;
+    timePtr->minutes = 00;
+    timePtr->seconds = 00;
 
     state = STATE_CLOCK;
 
     for (;;) {
+        // Ticks at ~250Hz
         if (serviceUpdate) {
             // clear update flag
             serviceUpdate = 0;
@@ -65,26 +66,25 @@ int main(void) {
                 LEDs_ToggleLEDs(LEDS_LED1);
             }
 
-            // cheezy time set
-            if (b1 == BUTTON_ON) {
-                timePtr->minutes++;
-                timePtr->seconds = 0;
-            }
-            if (b2 == BUTTON_ON) {
-                timePtr->hours++;
+            if (!isLocked()) {
+                timeBuffer.ticks %= TICKS_PER_SEC;
             }
 
-            processButtons();
-            processTime(timePtr);
+            // Ticks at 1Hz via external source
+            if (timeUpdate) {
+                timeUpdate = 0;
+
+                if (isLocked()) {
+                    processTime(&timeBuffer);
+                    LEDs_ToggleLEDs(LEDS_LED2);
+                } else {
+                    LEDs_TurnOnLEDs(LEDS_LED2);
+                }
+            }
+
+            tick(&timeBuffer);
             displayTime(&displayBuffer, timePtr);
             processDisplay(&displayBuffer);
-        }
-
-        // Only update state on second edge of PCINT
-        if (timeUpdate > 1) {
-            // clear update flag
-            timeUpdate = 0;
-            LEDs_ToggleLEDs(LEDS_LED2);
         }
 
         //CDC_Device_USBTask(&VirtualSerial_CDC_Interface);
@@ -119,10 +119,14 @@ void SetupHardware(void)
 
     /* Initialize PCINT */
     /* This sets up a pin-change interrupt to catch the 1PPS output of our rubidium source */
-    PINC   &= ~(1 << PC2);                    // PORTC[2] is an input
+    DDRC   &= ~(1 << PC2);                    // PORTC[2] is an input
     PORTC  &= ~(1 << PC2);                    // Weak pullup on PORTC[2] disabled
     PCMSK1 |=  (1 << PCINT11);                // Enable PCINT11 interrupt
     PCICR  |=  (1 << PCIE1);                  // Enable PCI1 interrupt generation on pin state change
+
+    /* Initialize !LOCK input pin */
+    DDRC   &= ~(1 << PC4);                    // PORTC[4] is an input
+    PORTC  &= ~(1 << PC4);                    // Weak pullup on PORTC[4] disabled
 }
 
 void processButtons(void) {
@@ -158,12 +162,23 @@ void processState(void) {
     // TODO: draw state diagram
 }
 
+inline uint8_t isLocked(void) {
+    if (PINC & (1 << PC4)) {
+        return 0;
+    }
+    return 1;
+}
+
 ISR(TIMER0_COMPA_vect) {
     serviceUpdate = 1;
 }
 
 ISR(PCINT1_vect) {
-    timeUpdate++;
+    edges++;
+    if (edges > 1) {
+        timeUpdate = 1;
+        edges = 0;
+    }
 }
 
 /** Event handler for the library USB Connection event. */
