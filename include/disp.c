@@ -123,6 +123,9 @@ void _setAnode(display_buf_t* display, uint8_t anode, uint8_t value) {
 		case ANODE_ODD:
 			display->anode_odd = value;
 			break;
+		case ANODE_ALL:
+			display->anode_even = value;
+			display->anode_odd = value;
 		default:
 			break;
 	}

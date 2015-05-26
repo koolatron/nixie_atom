@@ -76,6 +76,7 @@ int main(void) {
 
                 if (isLocked()) {
                     processTime(&timeBuffer);
+                    processTime(&countdownBuffer);
                     LEDs_ToggleLEDs(LEDS_LED2);
                 } else {
                     LEDs_TurnOnLEDs(LEDS_LED2);
@@ -85,6 +86,8 @@ int main(void) {
             tick(&timeBuffer);
             displayTime(&displayBuffer, timePtr);
             processDisplay(&displayBuffer);
+            processButtons();
+            processState();
         }
 
         //CDC_Device_USBTask(&VirtualSerial_CDC_Interface);
@@ -109,6 +112,10 @@ void SetupHardware(void)
     initSHR();
     initDisplay(&displayBuffer);
     initTime(&timeBuffer);
+    initTime(&countdownBuffer);
+
+    setCountDir(&countdownBuffer, COUNT_DOWN);
+    disableCount(&countdownBuffer);
 
     /* Initialize timer0 */
     /* This sets up a timer interrupt at 250Hz to signal display service */
@@ -159,7 +166,54 @@ void processButtons(void) {
 
 // Business logic
 void processState(void) {
-    // TODO: draw state diagram
+    switch(state) {
+        case STATE_CLOCK:
+            timePtr = &timeBuffer;
+
+            if (b1 == BUTTON_ON)
+                toggleCount(&timeBuffer);
+            if (b2 == BUTTON_ON)
+                state = STATE_CLOCK_SET;
+            if (b3 == BUTTON_ON)
+                state = STATE_COUNTDOWN;
+            break;
+
+        case STATE_CLOCK_SET:
+            disableCount(&timeBuffer);
+
+            if (b1 == BUTTON_ON)
+                nextMinute(&timeBuffer);
+            if (b2 == BUTTON_ON)
+                nextHour(&timeBuffer);
+            if (b3 == BUTTON_ON)
+                state = STATE_CLOCK;
+            break;
+
+        case STATE_COUNTDOWN:
+            timePtr = &countdownBuffer;
+
+            if (b1 == BUTTON_ON)
+                toggleCount(&countdownBuffer);
+            if (b2 == BUTTON_ON)
+                state = STATE_COUNTDOWN_SET;
+            if (b3 == BUTTON_ON)
+                state = STATE_CLOCK;
+            break;
+
+        case STATE_COUNTDOWN_SET:
+            disableCount(&countdownBuffer);
+
+            if (b1 == BUTTON_ON)
+                nextMinute(&countdownBuffer);
+            if (b2 == BUTTON_ON)
+                nextHour(&countdownBuffer);
+            if (b3 == BUTTON_ON)
+                state = STATE_COUNTDOWN;
+            break;
+
+        default:
+            break;
+    }
 }
 
 inline uint8_t isLocked(void) {

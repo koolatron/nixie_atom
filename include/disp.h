@@ -15,6 +15,8 @@
 
 #define ANODE_EVEN		0
 #define ANODE_ODD		1
+#define ANODE_ALL		2
+#define ANODE_NONE		3
 #define ANODE_OFF		0
 #define ANODE_ON		1
 

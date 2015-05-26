@@ -11,17 +11,17 @@ void initTime(time_buf_t* time) {
 }
 
 void tick(time_buf_t* time) {
-    if (time->count_en == COUNT_DISABLED)
-        return;
-
+//    if (time->count_en == COUNT_DISABLED)
+//        return;
+//
     time->ticks++;
 }
 
 void processTime(time_buf_t* time) {
-    if (time->count_en == COUNT_DISABLED)
-        return;
-
     if (time->count_dir == COUNT_UP) {
+        if (time->count_en == COUNT_DISABLED)
+            return;
+
         time->seconds++;
         time->ticks = 0;
 
@@ -47,6 +47,9 @@ void processTime(time_buf_t* time) {
     }
 
     if (time->count_dir == COUNT_DOWN) {
+        if (time->count_en == COUNT_DISABLED)
+            return;
+
         time->seconds--;
         time->ticks = 0;
 
@@ -61,6 +64,51 @@ void processTime(time_buf_t* time) {
         }
 
         if ((time->hours == 0) && (time->minutes == 0) && (time->seconds == 0))
-            time->count_en == COUNT_DISABLED;
+            time->count_en = COUNT_DISABLED;
+    }
+}
+
+void nextMinute(time_buf_t* time) {
+    time->ticks = 0;
+    time->seconds = 0;
+    time->minutes++;
+
+    if (time->minutes >= 60) {
+        nextHour(time);
+        time->minutes = 0;
+    }
+}
+
+void nextHour(time_buf_t* time) {
+    time->hours++;
+
+    if (time->hour_mode == HOUR_MODE_12) {
+        if (time->hours >= 13)
+            time->hours = 1;
+    }
+
+    if (time->hour_mode == HOUR_MODE_24) {
+        if (time->hours >= 24)
+            time->hours = 0;
+    }
+}
+
+void setCountDir(time_buf_t* time, uint8_t dir) {
+    time->count_dir = dir;
+}
+
+void enableCount(time_buf_t* time) {
+    time->count_en = COUNT_ENABLED;
+}
+
+void disableCount(time_buf_t* time) {
+    time->count_en = COUNT_DISABLED;
+}
+
+void toggleCount(time_buf_t* time) {
+    if (time->count_en == COUNT_ENABLED) {
+        time->count_en = COUNT_DISABLED;
+    } else {
+        time->count_en = COUNT_ENABLED;
     }
 }

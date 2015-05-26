@@ -27,11 +27,11 @@ typedef struct {
 void initTime(time_buf_t* time);
 void processTime(time_buf_t* time);
 void tick(time_buf_t* time);
-void setHours(time_buf_t* time, uint8_t hours);
-void setMinutes(time_buf_t* time, uint8_t minutes);
-void setSeconds(time_buf_t* time, uint8_t seconds);
+void nextMinute(time_buf_t* time);
+void nextHour(time_buf_t* time);
 void enableCount(time_buf_t* time);
 void disableCount(time_buf_t* time);
+void toggleCount(time_buf_t* time);
 void setCountDir(time_buf_t* time, uint8_t dir);
 
 #endif
