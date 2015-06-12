@@ -27,6 +27,9 @@
 #define DIGIT_4			4
 #define DIGIT_5			5
 
+#define BLANK_ON		0
+#define BLANK_OFF		1
+
 typedef struct {
 	uint8_t digit_0;
 	uint8_t digit_1;
@@ -36,15 +39,21 @@ typedef struct {
 	uint8_t digit_5;
 	uint8_t anode_even;
 	uint8_t anode_odd;
+	uint8_t blank;
 } display_buf_t;
 
 void processDisplay(display_buf_t* display);
 void initDisplay(display_buf_t* display);
 void displayDigits(display_buf_t* display, uint8_t* digits);
 void displayTime(display_buf_t* display, time_buf_t* time);
+void blankDisplay(display_buf_t* display);
+void unblankDisplay(display_buf_t* display);
+void toggleBlank(display_buf_t* display);
+
 void _sendBuffer(display_buf_t* display);
 void _setAnode(display_buf_t* display, uint8_t anode, uint8_t value);
 void _setDigit(display_buf_t* display, uint8_t digit, uint8_t value);
+void _setBlank(display_buf_t* display, uint8_t blank);
 uint8_t _scrambleDigit(uint8_t digit);
 
 #endif

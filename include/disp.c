@@ -3,6 +3,7 @@
 void initDisplay(display_buf_t* display) {
 	SHRClear();
     _delay_us(200);
+	_setBlank(display, BLANK_OFF);
     _setAnode(display, ANODE_ODD, ANODE_OFF);
 	_setAnode(display, ANODE_EVEN, ANODE_ON);
 	_setDigit(display, DIGIT_0, 0x00);
@@ -19,6 +20,7 @@ void processDisplay(display_buf_t* display) {
 	SHRClear();
 	_delay_us(200);
 
+	// Switch anode
     if (display->anode_even == ANODE_ON) {
         _setAnode(display, ANODE_ODD, ANODE_ON);
         _setAnode(display, ANODE_EVEN, ANODE_OFF);
@@ -26,7 +28,11 @@ void processDisplay(display_buf_t* display) {
         _setAnode(display, ANODE_ODD, ANODE_OFF);
         _setAnode(display, ANODE_EVEN, ANODE_ON);
     }
-    _sendBuffer(display);
+
+	// Only unblank and send data if blanking flag is unset
+	if (display->blank == BLANK_OFF) {
+    	_sendBuffer(display);
+	}
 
 //	// ** raw test pattern follows **
 //    if (display->anode_even == ANODE_ON) {
@@ -123,9 +129,6 @@ void _setAnode(display_buf_t* display, uint8_t anode, uint8_t value) {
 		case ANODE_ODD:
 			display->anode_odd = value;
 			break;
-		case ANODE_ALL:
-			display->anode_even = value;
-			display->anode_odd = value;
 		default:
 			break;
 	}
@@ -154,6 +157,26 @@ void _setDigit(display_buf_t* display, uint8_t digit, uint8_t value){
 			break;
 		default:
 			break;
+	}
+}
+
+inline void _setBlank(display_buf_t* display, uint8_t blank) {
+	display->blank = blank;
+}
+
+inline void blankDisplay(display_buf_t* display) {
+	_setBlank(display, BLANK_ON);
+}
+
+inline void unblankDisplay(display_buf_t* display) {
+	_setBlank(display, BLANK_OFF);
+}
+
+inline void toggleBlank(display_buf_t* display) {
+	if (display->blank == BLANK_ON) {
+		display->blank = BLANK_OFF;
+	} else {
+		display->blank = BLANK_ON;
 	}
 }
 

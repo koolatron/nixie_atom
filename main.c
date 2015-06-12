@@ -80,6 +80,7 @@ int main(void) {
                     LEDs_ToggleLEDs(LEDS_LED2);
                 } else {
                     LEDs_TurnOnLEDs(LEDS_LED2);
+                    toggleBlank(&displayBuffer);
                 }
             }
 
