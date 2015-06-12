@@ -30,8 +30,6 @@ uint32_t Boot_Key ATTR_NO_INIT;
 
 //static FILE USBSerialStream;
 static time_buf_t timeBuffer;
-static time_buf_t countdownBuffer;
-static time_buf_t *timePtr;
 static display_buf_t displayBuffer;
 
 uint8_t b1, b2, b3;
@@ -48,11 +46,9 @@ int main(void) {
 
     GlobalInterruptEnable();
 
-    timePtr = &timeBuffer;
-
-    timePtr->hours   = 00;
-    timePtr->minutes = 00;
-    timePtr->seconds = 00;
+    timeBuffer.hours   = 00;
+    timeBuffer.minutes = 00;
+    timeBuffer.seconds = 00;
 
     state = STATE_CLOCK;
 
@@ -76,7 +72,6 @@ int main(void) {
 
                 if (isLocked()) {
                     processTime(&timeBuffer);
-                    processTime(&countdownBuffer);
                     LEDs_ToggleLEDs(LEDS_LED2);
                 } else {
                     LEDs_TurnOnLEDs(LEDS_LED2);
@@ -85,7 +80,8 @@ int main(void) {
             }
 
             tick(&timeBuffer);
-            displayTime(&displayBuffer, timePtr);
+            displayTime(&displayBuffer, &timeBuffer);
+
             processDisplay(&displayBuffer);
             processButtons();
             processState();
@@ -113,10 +109,6 @@ void SetupHardware(void)
     initSHR();
     initDisplay(&displayBuffer);
     initTime(&timeBuffer);
-    initTime(&countdownBuffer);
-
-    setCountDir(&countdownBuffer, COUNT_DOWN);
-    disableCount(&countdownBuffer);
 
     /* Initialize timer0 */
     /* This sets up a timer interrupt at 250Hz to signal display service */
@@ -169,14 +161,12 @@ void processButtons(void) {
 void processState(void) {
     switch(state) {
         case STATE_CLOCK:
-            timePtr = &timeBuffer;
-
             if (b1 == BUTTON_ON)
                 toggleCount(&timeBuffer);
             if (b2 == BUTTON_ON)
-                state = STATE_CLOCK_SET;
+                toggleCountDir(&timeBuffer);
             if (b3 == BUTTON_ON)
-                state = STATE_COUNTDOWN;
+                state = STATE_CLOCK_SET;
             break;
 
         case STATE_CLOCK_SET:
@@ -189,29 +179,6 @@ void processState(void) {
             if (b3 == BUTTON_ON)
                 state = STATE_CLOCK;
             break;
-
-        case STATE_COUNTDOWN:
-            timePtr = &countdownBuffer;
-
-            if (b1 == BUTTON_ON)
-                toggleCount(&countdownBuffer);
-            if (b2 == BUTTON_ON)
-                state = STATE_COUNTDOWN_SET;
-            if (b3 == BUTTON_ON)
-                state = STATE_CLOCK;
-            break;
-
-        case STATE_COUNTDOWN_SET:
-            disableCount(&countdownBuffer);
-
-            if (b1 == BUTTON_ON)
-                nextMinute(&countdownBuffer);
-            if (b2 == BUTTON_ON)
-                nextHour(&countdownBuffer);
-            if (b3 == BUTTON_ON)
-                state = STATE_COUNTDOWN;
-            break;
-
         default:
             break;
     }

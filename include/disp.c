@@ -160,19 +160,19 @@ void _setDigit(display_buf_t* display, uint8_t digit, uint8_t value){
 	}
 }
 
-inline void _setBlank(display_buf_t* display, uint8_t blank) {
+void _setBlank(display_buf_t* display, uint8_t blank) {
 	display->blank = blank;
 }
 
-inline void blankDisplay(display_buf_t* display) {
+void blankDisplay(display_buf_t* display) {
 	_setBlank(display, BLANK_ON);
 }
 
-inline void unblankDisplay(display_buf_t* display) {
+void unblankDisplay(display_buf_t* display) {
 	_setBlank(display, BLANK_OFF);
 }
 
-inline void toggleBlank(display_buf_t* display) {
+void toggleBlank(display_buf_t* display) {
 	if (display->blank == BLANK_ON) {
 		display->blank = BLANK_OFF;
 	} else {

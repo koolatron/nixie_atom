@@ -28,10 +28,8 @@
 
 #define STATE_CLOCK                 0
 #define STATE_CLOCK_SET             1
-#define STATE_COUNTDOWN             2
-#define STATE_COUNTDOWN_SET         3
-#define STATE_COUNTDOWN_OVER        4
-#define STATE_SLOTMACHINE           5
+#define STATE_COUNTDOWN_OVER        2
+#define STATE_SLOTMACHINE           3
 
 #define BUTTON_ON                   25
 #define BUTTON_OFF                  0

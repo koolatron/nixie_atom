@@ -11,9 +11,6 @@ void initTime(time_buf_t* time) {
 }
 
 void tick(time_buf_t* time) {
-//    if (time->count_en == COUNT_DISABLED)
-//        return;
-//
     time->ticks++;
 }
 
@@ -74,7 +71,6 @@ void nextMinute(time_buf_t* time) {
     time->minutes++;
 
     if (time->minutes >= 60) {
-        nextHour(time);
         time->minutes = 0;
     }
 }
@@ -93,10 +89,6 @@ void nextHour(time_buf_t* time) {
     }
 }
 
-void setCountDir(time_buf_t* time, uint8_t dir) {
-    time->count_dir = dir;
-}
-
 void enableCount(time_buf_t* time) {
     time->count_en = COUNT_ENABLED;
 }
@@ -110,5 +102,13 @@ void toggleCount(time_buf_t* time) {
         time->count_en = COUNT_DISABLED;
     } else {
         time->count_en = COUNT_ENABLED;
+    }
+}
+
+void toggleCountDir(time_buf_t* time) {
+    if (time->count_dir == COUNT_UP) {
+        time->count_dir = COUNT_DOWN;
+    } else {
+        time->count_dir = COUNT_UP;
     }
 }

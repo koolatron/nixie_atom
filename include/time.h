@@ -32,6 +32,6 @@ void nextHour(time_buf_t* time);
 void enableCount(time_buf_t* time);
 void disableCount(time_buf_t* time);
 void toggleCount(time_buf_t* time);
-void setCountDir(time_buf_t* time, uint8_t dir);
+void toggleCountDir(time_buf_t* time);
 
 #endif
