@@ -22,13 +22,15 @@ void initDisplay(display_buf_t* display) {
 	_sendBuffer(display);
 }
 
-void processDisplay(display_buf_t* display, time_buf_t* time) {
+void processDisplay(display_buf_t* display) {
 	// blank for ~200us
 	SHRClear();
 	_delay_us(200);
 
 	if (display->flash == FLASH_ON) {
-		if ((time->ticks % display->flash_rate) == 0) {
+		display->flash_rate_counter++;
+		if ((display->flash_rate_counter % display->flash_rate) == 0) {
+			display->flash_rate_counter = 0;
 			_toggleBlank(display);
 		}
 	}
@@ -59,6 +61,7 @@ void displayDigits(display_buf_t* display, uint8_t* digits) {
 	}
 }
 
+/** Take a time_buf_t and copy the time it represents into a display_buf_t */
 void displayTime(display_buf_t* display, time_buf_t* time) {
 	uint8_t tens, ones;
 

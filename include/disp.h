@@ -13,28 +13,29 @@
 #include "time.h"
 #include "shift.h"
 
-#define ANODE_EVEN			0
-#define ANODE_ODD			1
-#define ANODE_ALL			2
-#define ANODE_NONE			3
-#define ANODE_OFF			4
-#define ANODE_ON			5
+#define ANODE_EVEN				0
+#define ANODE_ODD				1
+#define ANODE_ALL				2
+#define ANODE_NONE				3
+#define ANODE_OFF				4
+#define ANODE_ON				5
 
-#define DIGIT_0				0
-#define DIGIT_1				1
-#define DIGIT_2				2
-#define DIGIT_3				3
-#define DIGIT_4				4
-#define DIGIT_5				5
+#define DIGIT_0					0
+#define DIGIT_1					1
+#define DIGIT_2					2
+#define DIGIT_3					3
+#define DIGIT_4					4
+#define DIGIT_5					5
 
-#define BLANK_ON			0
-#define BLANK_OFF			1
+#define BLANK_ON				0
+#define BLANK_OFF				1
 
-#define FLASH_ON			0
-#define FLASH_OFF			1
+#define FLASH_ON				0
+#define FLASH_OFF				1
 
-#define FLASH_RATE_FAST		50
-#define FLASH_RATE_SLOW 	125
+#define FLASH_RATE_FAST			50
+#define FLASH_RATE_SLOW 		125
+#define FLASH_RATE_VERY_SLOW 	250
 
 typedef struct {
 	// Display data
@@ -51,9 +52,10 @@ typedef struct {
 	uint8_t blank;
 	uint8_t flash;
 	uint8_t flash_rate;
+	uint8_t flash_rate_counter;
 } display_buf_t;
 
-void processDisplay(display_buf_t* display, time_buf_t* time);
+void processDisplay(display_buf_t* display);
 void initDisplay(display_buf_t* display);
 
 void displayDigits(display_buf_t* display, uint8_t* digits);

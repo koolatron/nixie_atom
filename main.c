@@ -57,6 +57,7 @@ int main(void) {
         if (serviceUpdate) {
             serviceUpdate = 0;
 
+            // TODO: make the non-locked case a separate state
             if (!isLocked()) {
                 stateBuffer.oscillator = STATE_LOCKED_FALSE;
                 disableCount(&timeBuffer);
@@ -80,7 +81,7 @@ int main(void) {
             processState();
 
             displayTime(&displayBuffer, &timeBuffer);
-            processDisplay(&displayBuffer, &timeBuffer);
+            processDisplay(&displayBuffer);
         }
 
         //CDC_Device_USBTask(&VirtualSerial_CDC_Interface);
@@ -118,13 +119,13 @@ void SetupHardware(void)
 
     /* Initialize PCINT */
     /* This sets up a pin-change interrupt to catch the 1PPS output of our rubidium source */
-    DDRC   &= ~(1 << PC2);                  // PORTC[2] is an input
+    DDRC   &= ~(1 << PC2);                    // PORTC[2] is an input
     PORTC  &= ~(1 << PC2);                    // Weak pullup on PORTC[2] disabled
     PCMSK1 |=  (1 << PCINT11);                // Enable PCINT11 interrupt
     PCICR  |=  (1 << PCIE1);                  // Enable PCI1 interrupt generation on pin state change
 
     /* Initialize !LOCK input pin */
-    DDRC   &= ~(1 << PC4);                  // PORTC[4] is an input
+    DDRC   &= ~(1 << PC4);                    // PORTC[4] is an input
     PORTC  &= ~(1 << PC4);                    // Weak pullup on PORTC[4] disabled
 }
 

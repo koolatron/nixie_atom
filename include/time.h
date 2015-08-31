@@ -3,9 +3,6 @@
 
 #include <stdint.h>
 
-// Comment out to use internal clock source
-#define CLOCK_SOURCE_EXT
-
 #define TICKS_PER_SEC 		250
 #define HOUR_MODE_12		0
 #define HOUR_MODE_24 		1

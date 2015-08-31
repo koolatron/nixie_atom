@@ -16,6 +16,8 @@
 #include <LUFA/Drivers/USB/USB.h>
 #include <LUFA/Platform/Platform.h>
 
+#define CLOCK_SOURCE_EXT			// Comment out to use internal clock source
+
 #define FLASH_SIZE_BYTES            0x8000
 #define BOOTLOADER_SEC_SIZE_BYTES   0x1000
 #define BOOTLOADER_START_ADDRESS    (FLASH_SIZE_BYTES - BOOTLOADER_SEC_SIZE_BYTES)
@@ -26,8 +28,9 @@
 #define LEDMASK_USB_ERROR           LEDS_ALL_LEDS
 #define LEDMASK_USB_READY           LEDS_LED1
 
-#define STATE_LOGIC_COUNT           0
-#define STATE_LOGIC_SET             1
+#define STATE_LOGIC_NOT_LOCKED		0
+#define STATE_LOGIC_COUNT           1
+#define STATE_LOGIC_SET             2
 
 #define STATE_LOCKED_TRUE           5
 #define STATE_LOCKED_FALSE          6
