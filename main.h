@@ -32,8 +32,8 @@
 #define STATE_LOCKED_TRUE           5
 #define STATE_LOCKED_FALSE          6
 
-#define BUTTON_ON                   25
-#define BUTTON_OFF                  0
+#define BUTTON_ON                   0
+#define BUTTON_OFF                  25		// button delay in ms/4
 
 typedef struct {
 	uint8_t logic;

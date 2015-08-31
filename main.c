@@ -60,9 +60,10 @@ int main(void) {
             if (!isLocked()) {
                 stateBuffer.oscillator = STATE_LOCKED_FALSE;
                 disableCount(&timeBuffer);
+                LEDs_SetAllLEDs(LEDS_LED1);
             } else {
                 stateBuffer.oscillator = STATE_LOCKED_TRUE;
-                enableCount(&timeBuffer);
+                LEDs_ToggleLEDs(LEDS_LED1);
             }
 
             tick(&timeBuffer);
@@ -131,27 +132,27 @@ void processButtons(void) {
     uint8_t button_status = Buttons_GetStatus();
 
     if (button_status & BUTTONS_BUTTON1) {
-        if (b1 < BUTTON_OFF)
-          b1++;
-    } else {
         if (b1 > BUTTON_ON)
           b1--;
+    } else {
+        if (b1 < BUTTON_OFF)
+          b1++;
     }
 
     if (button_status & BUTTONS_BUTTON2) {
-        if (b2 < BUTTON_OFF)
-          b2++;
-    } else {
         if (b2 > BUTTON_ON)
           b2--;
+    } else {
+        if (b2 < BUTTON_OFF)
+          b2++;
     }
 
     if (button_status & BUTTONS_BUTTON3) {
-        if (b3 < BUTTON_OFF)
-          b3++;
-    } else {
         if (b3 > BUTTON_ON)
           b3--;
+    } else {
+        if (b3 < BUTTON_OFF)
+          b3++;
     }
 }
 
@@ -162,30 +163,43 @@ void processState(void) {
             if (stateBuffer.oscillator == STATE_LOCKED_FALSE) {
                 displayBuffer.flash = FLASH_ON;
                 displayBuffer.flash_rate = FLASH_RATE_SLOW;
+                return;  // don't do any more processing if we're not locked.
             } else {
                 displayBuffer.flash = FLASH_OFF;
             }
 
-            if (b1 == BUTTON_ON)
+            if (b1 == BUTTON_ON) {
+                b1 = BUTTON_OFF;
                 toggleCount(&timeBuffer);
-            if (b2 == BUTTON_ON)
+            }
+            if (b2 == BUTTON_ON) {
+                b2 = BUTTON_OFF;
                 toggleCountDir(&timeBuffer);
-            if (b3 == BUTTON_ON)
+            }
+            if (b3 == BUTTON_ON) {
+                b3 = BUTTON_OFF;
                 stateBuffer.logic = STATE_LOGIC_SET;
+            }
             break;
 
         case STATE_LOGIC_SET:
             disableCount(&timeBuffer);
-            
+
             displayBuffer.flash = FLASH_ON;
             displayBuffer.flash_rate = FLASH_RATE_FAST;
 
-            if (b1 == BUTTON_ON)
+            if (b1 == BUTTON_ON) {
+                b1 = BUTTON_OFF;
                 nextMinute(&timeBuffer);
-            if (b2 == BUTTON_ON)
+            }
+            if (b2 == BUTTON_ON) {
+                b2 = BUTTON_OFF;
                 nextHour(&timeBuffer);
-            if (b3 == BUTTON_ON)
+            }
+            if (b3 == BUTTON_ON) {
+                b3 = BUTTON_OFF;
                 stateBuffer.logic = STATE_LOGIC_COUNT;
+            }
             break;
         default:
             break;

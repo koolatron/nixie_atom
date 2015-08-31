@@ -12,19 +12,19 @@ void initTime(time_buf_t* time) {
 
 void tick(time_buf_t* time) {
     time->ticks++;
-}
 
-void processTime(time_buf_t* time) {
+    // Ticks are disconnected from processTime; our external oscillator triggers counts
     if (time->ticks >= TICKS_PER_SEC) {
         time->ticks = 0;
     }
+}
 
+void processTime(time_buf_t* time) {
     if (time->count_dir == COUNT_UP) {
         if (time->count_en == COUNT_DISABLED)
             return;
 
         time->seconds++;
-        time->ticks = 0;
 
     	if (time->seconds >= 60) {
     		time->minutes++;
