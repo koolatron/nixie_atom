@@ -15,6 +15,10 @@ void tick(time_buf_t* time) {
 }
 
 void processTime(time_buf_t* time) {
+    if (time->ticks >= TICKS_PER_SEC) {
+        time->ticks = 0;
+    }
+
     if (time->count_dir == COUNT_UP) {
         if (time->count_en == COUNT_DISABLED)
             return;

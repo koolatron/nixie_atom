@@ -31,65 +31,65 @@ uint32_t Boot_Key ATTR_NO_INIT;
 //static FILE USBSerialStream;
 static time_buf_t timeBuffer;
 static display_buf_t displayBuffer;
+static state_buf_t stateBuffer;
 
 uint8_t b1, b2, b3;
-uint8_t state;
 
 volatile uint8_t serviceUpdate;
 volatile uint8_t timeUpdate, edges;
 
 int main(void) {
+    // Hardware initialization
     SetupHardware();
 
     /* Create a regular character stream for the interface so that it can be used with the stdio.h functions */
     //CDC_Device_CreateStream(&VirtualSerial_CDC_Interface, &USBSerialStream);
 
+    // Buffer initialization
+    initState(&stateBuffer);
+    initDisplay(&displayBuffer);
+    initTime(&timeBuffer);
+
     GlobalInterruptEnable();
-
-    timeBuffer.hours   = 00;
-    timeBuffer.minutes = 00;
-    timeBuffer.seconds = 00;
-
-    state = STATE_CLOCK;
 
     for (;;) {
         // Ticks at ~250Hz
         if (serviceUpdate) {
-            // clear update flag
             serviceUpdate = 0;
 
-            if ((timeBuffer.ticks % 125) == 0) {
-                LEDs_ToggleLEDs(LEDS_LED1);
-            }
-
             if (!isLocked()) {
-                timeBuffer.ticks %= TICKS_PER_SEC;
-            }
-
-            // Ticks at 1Hz via external source
-            if (timeUpdate) {
-                timeUpdate = 0;
-
-                if (isLocked()) {
-                    processTime(&timeBuffer);
-                    LEDs_ToggleLEDs(LEDS_LED2);
-                } else {
-                    LEDs_TurnOnLEDs(LEDS_LED2);
-                    toggleBlank(&displayBuffer);
-                }
+                stateBuffer.oscillator = STATE_LOCKED_FALSE;
+                disableCount(&timeBuffer);
+            } else {
+                stateBuffer.oscillator = STATE_LOCKED_TRUE;
+                enableCount(&timeBuffer);
             }
 
             tick(&timeBuffer);
-            displayTime(&displayBuffer, &timeBuffer);
 
-            processDisplay(&displayBuffer);
+            // Ticks at 1Hz via external interrupt
+            if (timeUpdate) {
+                timeUpdate = 0;
+
+                processTime(&timeBuffer);
+                LEDs_ToggleLEDs(LEDS_LED2);
+            }
+
             processButtons();
             processState();
+
+            displayTime(&displayBuffer, &timeBuffer);
+            processDisplay(&displayBuffer, &timeBuffer);
         }
 
         //CDC_Device_USBTask(&VirtualSerial_CDC_Interface);
         //USB_USBTask();
     };
+}
+
+void initState(state_buf_t* stateBuffer) {
+  stateBuffer->logic = STATE_LOGIC_COUNT;
+  stateBuffer->oscillator = STATE_LOCKED_FALSE;
 }
 
 /** Configures the board hardware and chip peripherals. */
@@ -102,13 +102,11 @@ void SetupHardware(void)
     /* Disable clock division */
     clock_prescale_set(clock_div_1);
 
-    /* Hardware Initialization */
+    /* General Initialization */
     //USB_Init();
     Buttons_Init();
     LEDs_Init();
     initSHR();
-    initDisplay(&displayBuffer);
-    initTime(&timeBuffer);
 
     /* Initialize timer0 */
     /* This sets up a timer interrupt at 250Hz to signal display service */
@@ -119,13 +117,13 @@ void SetupHardware(void)
 
     /* Initialize PCINT */
     /* This sets up a pin-change interrupt to catch the 1PPS output of our rubidium source */
-    DDRC   &= ~(1 << PC2);                    // PORTC[2] is an input
+    DDRC   &= ~(1 << PC2);                  // PORTC[2] is an input
     PORTC  &= ~(1 << PC2);                    // Weak pullup on PORTC[2] disabled
     PCMSK1 |=  (1 << PCINT11);                // Enable PCINT11 interrupt
     PCICR  |=  (1 << PCIE1);                  // Enable PCI1 interrupt generation on pin state change
 
     /* Initialize !LOCK input pin */
-    DDRC   &= ~(1 << PC4);                    // PORTC[4] is an input
+    DDRC   &= ~(1 << PC4);                  // PORTC[4] is an input
     PORTC  &= ~(1 << PC4);                    // Weak pullup on PORTC[4] disabled
 }
 
@@ -133,51 +131,61 @@ void processButtons(void) {
     uint8_t button_status = Buttons_GetStatus();
 
     if (button_status & BUTTONS_BUTTON1) {
-        if (b1 > BUTTON_ON) {
-            b1 = BUTTON_OFF;
-        } else {
-            b1++;
-        }
+        if (b1 < BUTTON_OFF)
+          b1++;
+    } else {
+        if (b1 > BUTTON_ON)
+          b1--;
     }
 
     if (button_status & BUTTONS_BUTTON2) {
-        if (b2 > BUTTON_ON) {
-            b2 = BUTTON_OFF;
-        } else {
-            b2++;
-        }
+        if (b2 < BUTTON_OFF)
+          b2++;
+    } else {
+        if (b2 > BUTTON_ON)
+          b2--;
     }
 
     if (button_status & BUTTONS_BUTTON3) {
-        if (b3 > BUTTON_ON) {
-            b3 = BUTTON_OFF;
-        } else {
-            b3++;
-        }
+        if (b3 < BUTTON_OFF)
+          b3++;
+    } else {
+        if (b3 > BUTTON_ON)
+          b3--;
     }
 }
 
 // Business logic
 void processState(void) {
-    switch(state) {
-        case STATE_CLOCK:
+    switch(stateBuffer.logic) {
+        case STATE_LOGIC_COUNT:
+            if (stateBuffer.oscillator == STATE_LOCKED_FALSE) {
+                displayBuffer.flash = FLASH_ON;
+                displayBuffer.flash_rate = FLASH_RATE_SLOW;
+            } else {
+                displayBuffer.flash = FLASH_OFF;
+            }
+
             if (b1 == BUTTON_ON)
                 toggleCount(&timeBuffer);
             if (b2 == BUTTON_ON)
                 toggleCountDir(&timeBuffer);
             if (b3 == BUTTON_ON)
-                state = STATE_CLOCK_SET;
+                stateBuffer.logic = STATE_LOGIC_SET;
             break;
 
-        case STATE_CLOCK_SET:
+        case STATE_LOGIC_SET:
             disableCount(&timeBuffer);
+            
+            displayBuffer.flash = FLASH_ON;
+            displayBuffer.flash_rate = FLASH_RATE_FAST;
 
             if (b1 == BUTTON_ON)
                 nextMinute(&timeBuffer);
             if (b2 == BUTTON_ON)
                 nextHour(&timeBuffer);
             if (b3 == BUTTON_ON)
-                state = STATE_CLOCK;
+                stateBuffer.logic = STATE_LOGIC_COUNT;
             break;
         default:
             break;
@@ -191,10 +199,12 @@ inline uint8_t isLocked(void) {
     return 1;
 }
 
+/** Timer interrupt triggers every 4ms */
 ISR(TIMER0_COMPA_vect) {
     serviceUpdate = 1;
 }
 
+/** Pin-change interrupt triggers twice per second */
 ISR(PCINT1_vect) {
     edges++;
     if (edges > 1) {

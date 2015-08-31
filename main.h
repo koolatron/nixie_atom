@@ -19,20 +19,27 @@
 #define FLASH_SIZE_BYTES            0x8000
 #define BOOTLOADER_SEC_SIZE_BYTES   0x1000
 #define BOOTLOADER_START_ADDRESS    (FLASH_SIZE_BYTES - BOOTLOADER_SEC_SIZE_BYTES)
-#define MAGIC_BOOT_KEY              0xB0DAC1E5
+#define MAGIC_BOOT_KEY              0x5CA1AB1E
 
 #define LEDMASK_USB_ENUMERATING     LEDS_LED1
 #define LEDMASK_USB_NOTREADY        LEDS_LED2
 #define LEDMASK_USB_ERROR           LEDS_ALL_LEDS
 #define LEDMASK_USB_READY           LEDS_LED1
 
-#define STATE_CLOCK                 0
-#define STATE_CLOCK_SET             1
-#define STATE_COUNTDOWN_OVER        2
-#define STATE_SLOTMACHINE           3
+#define STATE_LOGIC_COUNT           0
+#define STATE_LOGIC_SET             1
+
+#define STATE_LOCKED_TRUE           5
+#define STATE_LOCKED_FALSE          6
 
 #define BUTTON_ON                   25
 #define BUTTON_OFF                  0
+
+typedef struct {
+	uint8_t logic;
+	uint8_t buttons;
+	uint8_t oscillator;
+} state_buf_t;
 
 void processButtons(void);
 void processState(void);
@@ -44,6 +51,7 @@ inline uint8_t isLocked(void);
 void Bootloader_Jump_Check(void) ATTR_INIT_SECTION(3);
 void Jump_To_Bootloader(void);
 
+void initState(state_buf_t *stateBuffer);
 void SetupHardware(void);
 
 void EVENT_USB_Device_Connect(void);

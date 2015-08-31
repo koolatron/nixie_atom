@@ -6,13 +6,13 @@
 // Comment out to use internal clock source
 #define CLOCK_SOURCE_EXT
 
-#define TICKS_PER_SEC 	250
-#define HOUR_MODE_12	0
-#define HOUR_MODE_24 	1
-#define COUNT_ENABLED	0
-#define COUNT_DISABLED	1
-#define COUNT_UP		0
-#define COUNT_DOWN		1
+#define TICKS_PER_SEC 		250
+#define HOUR_MODE_12		0
+#define HOUR_MODE_24 		1
+#define COUNT_ENABLED		0
+#define COUNT_DISABLED		1
+#define COUNT_UP			0
+#define COUNT_DOWN			1
 
 typedef struct {
 	uint8_t hours;

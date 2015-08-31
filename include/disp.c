@@ -2,23 +2,41 @@
 
 void initDisplay(display_buf_t* display) {
 	SHRClear();
-    _delay_us(200);
+	_delay_us(200);
+
 	_setBlank(display, BLANK_OFF);
-    _setAnode(display, ANODE_ODD, ANODE_OFF);
+
+	_setFlash(display, FLASH_OFF);
+	_setFlashRate(display, FLASH_RATE_FAST);
+
+	_setAnode(display, ANODE_ODD, ANODE_OFF);
 	_setAnode(display, ANODE_EVEN, ANODE_ON);
+
 	_setDigit(display, DIGIT_0, 0x00);
 	_setDigit(display, DIGIT_1, 0x00);
 	_setDigit(display, DIGIT_2, 0x00);
 	_setDigit(display, DIGIT_3, 0x00);
 	_setDigit(display, DIGIT_4, 0x00);
 	_setDigit(display, DIGIT_5, 0x00);
+
 	_sendBuffer(display);
 }
 
-void processDisplay(display_buf_t* display) {
+void processDisplay(display_buf_t* display, time_buf_t* time) {
 	// blank for ~200us
 	SHRClear();
 	_delay_us(200);
+
+	if (display->flash == FLASH_ON) {
+		if ((time->ticks % display->flash_rate) == 0) {
+			_toggleBlank(display);
+		}
+	}
+
+	// If flashing is turned off while the display was blank, unset blank
+	if ((display->blank == BLANK_ON) && (display->flash == FLASH_OFF)) {
+		_toggleBlank(display);
+	}
 
 	// Switch anode
     if (display->anode_even == ANODE_ON) {
@@ -29,27 +47,7 @@ void processDisplay(display_buf_t* display) {
         _setAnode(display, ANODE_EVEN, ANODE_ON);
     }
 
-	// Only unblank and send data if blanking flag is unset
-	if (display->blank == BLANK_OFF) {
-    	_sendBuffer(display);
-	}
-
-//	// ** raw test pattern follows **
-//    if (display->anode_even == ANODE_ON) {
-//        // even anodes, show a 7
-//        SHRSendByte(0x10);
-//        SHRSendByte(0x00);
-//        _setAnode(display, ANODE_EVEN, ANODE_OFF);
-//        _setAnode(display, ANODE_ODD, ANODE_ON);
-//    	SHRLatch();
-//    } else {
-//        // odd anodes, show an 8
-//        SHRSendByte(0x21);
-//        SHRSendByte(0x11);
-//        _setAnode(display, ANODE_EVEN, ANODE_ON);
-//        _setAnode(display, ANODE_ODD, ANODE_OFF);
-//        SHRLatch();
-//     }
+	_sendBuffer(display);
 }
 
 // Just display some bytes
@@ -87,7 +85,7 @@ void displayTime(display_buf_t* display, time_buf_t* time) {
 void _sendBuffer(display_buf_t* display) {
 	// construct a bit buffer to clock out to the shift registers
 	uint8_t rawbits[2] = {0x00, 0x00};
-    uint8_t rawbits_reversed[2] = {0x00, 0x00};
+	uint8_t rawbits_reversed[2] = {0x00, 0x00};
 	uint8_t i;
 
 	if (display->anode_even == ANODE_ON) {
@@ -106,6 +104,11 @@ void _sendBuffer(display_buf_t* display) {
 		rawbits[0] |= ((_scrambleDigit(display->digit_1)) << 4);
 		rawbits[0] |= _scrambleDigit(display->digit_3);
 		rawbits[1] |= ((_scrambleDigit(display->digit_5)) << 4);
+	}
+
+	// Clear both anode bits if blanking flag is set
+	if (display->blank == BLANK_ON) {
+		rawbits[1] &= ~(0x0c);
 	}
 
 	// reverse the bits so they're in the right order to clock out
@@ -164,15 +167,15 @@ void _setBlank(display_buf_t* display, uint8_t blank) {
 	display->blank = blank;
 }
 
-void blankDisplay(display_buf_t* display) {
-	_setBlank(display, BLANK_ON);
+void _setFlash(display_buf_t* display, uint8_t flash) {
+	display->flash = flash;
 }
 
-void unblankDisplay(display_buf_t* display) {
-	_setBlank(display, BLANK_OFF);
+void _setFlashRate(display_buf_t* display, uint8_t rate) {
+	display->flash_rate = rate;
 }
 
-void toggleBlank(display_buf_t* display) {
+void _toggleBlank(display_buf_t* display) {
 	if (display->blank == BLANK_ON) {
 		display->blank = BLANK_OFF;
 	} else {
