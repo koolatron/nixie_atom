@@ -57,16 +57,6 @@ int main(void) {
         if (serviceUpdate) {
             serviceUpdate = 0;
 
-            // TODO: make the non-locked case a separate state
-            if (!isLocked()) {
-                stateBuffer.oscillator = STATE_LOCKED_FALSE;
-                disableCount(&timeBuffer);
-                LEDs_SetAllLEDs(LEDS_LED1);
-            } else {
-                stateBuffer.oscillator = STATE_LOCKED_TRUE;
-                LEDs_ToggleLEDs(LEDS_LED1);
-            }
-
             tick(&timeBuffer);
 
             // Ticks at 1Hz via external interrupt
@@ -90,8 +80,8 @@ int main(void) {
 }
 
 void initState(state_buf_t* stateBuffer) {
-  stateBuffer->logic = STATE_LOGIC_COUNT;
-  stateBuffer->oscillator = STATE_LOCKED_FALSE;
+  stateBuffer->logic = STATE_LOGIC_NOT_LOCKED;
+  stateBuffer->lock = STATE_LOCK_FALSE;
 }
 
 /** Configures the board hardware and chip peripherals. */
@@ -160,14 +150,23 @@ void processButtons(void) {
 // Business logic
 void processState(void) {
     switch(stateBuffer.logic) {
-        case STATE_LOGIC_COUNT:
-            if (stateBuffer.oscillator == STATE_LOCKED_FALSE) {
-                displayBuffer.flash = FLASH_ON;
-                displayBuffer.flash_rate = FLASH_RATE_SLOW;
-                return;  // don't do any more processing if we're not locked.
-            } else {
-                displayBuffer.flash = FLASH_OFF;
+        case STATE_LOGIC_NOT_LOCKED:
+            disableCount(&timeBuffer);
+
+            displayBuffer.flash = FLASH_ON;
+            displayBuffer.flash_rate = FLASH_RATE_SLOW;
+
+            stateBuffer.lock = STATE_LOCK_FALSE;
+
+            LEDs_SetAllLEDs(LEDS_LED1);
+
+            if (isLocked()) {
+                stateBuffer.logic = STATE_LOGIC_COUNT;
+                stateBuffer.lock = STATE_LOCK_TRUE;
             }
+            break;
+        case STATE_LOGIC_COUNT:
+            displayBuffer.flash = FLASH_OFF;
 
             if (b1 == BUTTON_ON) {
                 b1 = BUTTON_OFF;
@@ -182,7 +181,6 @@ void processState(void) {
                 stateBuffer.logic = STATE_LOGIC_SET;
             }
             break;
-
         case STATE_LOGIC_SET:
             disableCount(&timeBuffer);
 
