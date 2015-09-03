@@ -66,6 +66,14 @@ int main(void) {
             }
 
             tick(&timeBuffer);
+
+#ifndef CLOCK_SOURCE_EXT
+            if (timeBuffer.ticks == TICKS_PER_SEC) {
+                timeBuffer.ticks = 0;
+                timeUpdate = 1;
+            }
+#endif // CLOCK_SOURCE_EXT
+
             processButtons();
             processState();
             processDisplay(&displayBuffer);
@@ -108,10 +116,12 @@ void SetupHardware(void)
 
     /* Initialize PCINT */
     /* This sets up a pin-change interrupt to catch the 1PPS output of our rubidium source */
+#ifdef CLOCK_SOURCE_EXT
     DDRC   &= ~(1 << PC2);                    // PORTC[2] is an input
     PORTC  &= ~(1 << PC2);                    // Weak pullup on PORTC[2] disabled
     PCMSK1 |=  (1 << PCINT11);                // Enable PCINT11 interrupt
     PCICR  |=  (1 << PCIE1);                  // Enable PCI1 interrupt generation on pin state change
+#endif // CLOCK_SOURCE_EXT
 
     /* Initialize !LOCK input pin */
     DDRC   &= ~(1 << PC4);                    // PORTC[4] is an input
@@ -178,6 +188,10 @@ void processState(void) {
             if (b3 == BUTTON_ON) {
                 b3 = BUTTON_OFF;
                 stateBuffer.logic = STATE_LOGIC_SET;
+
+                timeBuffer.hours = 0;
+                timeBuffer.minutes = 0;
+                timeBuffer.seconds = 0;
             }
 
             // Countdown complete condition
@@ -186,7 +200,7 @@ void processState(void) {
                     (timeBuffer.minutes == 0) &&
                     (timeBuffer.seconds == 0)) {
                         stateBuffer.logic = STATE_LOGIC_SLOTMACHINE;
-                    }
+                }
             }
             break;
         case STATE_LOGIC_SET:
@@ -194,10 +208,6 @@ void processState(void) {
 
             displayBuffer.flash = FLASH_ON;
             displayBuffer.flash_rate = FLASH_RATE_FAST;
-
-            timeBuffer.hours = 0;
-            timeBuffer.minutes = 0;
-            timeBuffer.seconds = 0;
 
             if (b1 == BUTTON_ON) {
                 b1 = BUTTON_OFF;
@@ -221,6 +231,7 @@ void processState(void) {
             if ((stateBuffer.update_rate_counter % stateBuffer.update_rate) == 0) {
                 stateBuffer.update_rate_counter = 0;
 
+                // can probably get better randomness than this
                 timeBuffer.seconds = rand() % 100;
                 timeBuffer.minutes = rand() % 100;
                 timeBuffer.hours   = rand() % 100;
@@ -245,9 +256,11 @@ void processState(void) {
 }
 
 inline uint8_t isLocked(void) {
+#ifdef CLOCK_SOURCE_EXT
     if (PINC & (1 << PC4)) {
         return 0;
     }
+#endif // CLOCK_SOURCE_EXT
     return 1;
 }
 
@@ -258,11 +271,13 @@ ISR(TIMER0_COMPA_vect) {
 
 /** Pin-change interrupt triggers twice per second */
 ISR(PCINT1_vect) {
+#ifdef CLOCK_SOURCE_EXT
     edges++;
     if (edges > 1) {
         timeUpdate = 1;
         edges = 0;
     }
+#endif // CLOCK_SOURCE_EXT
 }
 
 /** Event handler for the library USB Connection event. */
