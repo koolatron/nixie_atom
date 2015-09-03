@@ -38,7 +38,7 @@
 #define STATE_LOCK_TRUE             5
 #define STATE_LOCK_FALSE            6
 
-#define UPDATE_RATE_VERY_FAST		25
+#define UPDATE_RATE_VERY_FAST		40
 #define UPDATE_RATE_FAST			62
 #define UPDATE_RATE_SLOW			150
 #define UPDATE_RATE_VERY_SLOW		250

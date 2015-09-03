@@ -77,10 +77,10 @@ int main(void) {
 }
 
 void initState(state_buf_t* stateBuffer) {
-  stateBuffer->logic = STATE_LOGIC_NOT_LOCKED;
-  stateBuffer->lock = STATE_LOCK_FALSE;
-  stateBuffer->update_rate = UPDATE_RATE_FAST;
-  stateBuffer->update_rate_counter = 0;
+    stateBuffer->logic = STATE_LOGIC_NOT_LOCKED;
+    stateBuffer->lock = STATE_LOCK_FALSE;
+    stateBuffer->update_rate = UPDATE_RATE_VERY_FAST;
+    stateBuffer->update_rate_counter = 0;
 }
 
 /** Configures the board hardware and chip peripherals. */
@@ -180,6 +180,7 @@ void processState(void) {
                 stateBuffer.logic = STATE_LOGIC_SET;
             }
 
+            // Countdown complete condition
             if (timeBuffer.count_dir == COUNT_DOWN) {
                 if ((timeBuffer.hours   == 0) &&
                     (timeBuffer.minutes == 0) &&
@@ -193,6 +194,10 @@ void processState(void) {
 
             displayBuffer.flash = FLASH_ON;
             displayBuffer.flash_rate = FLASH_RATE_FAST;
+
+            timeBuffer.hours = 0;
+            timeBuffer.minutes = 0;
+            timeBuffer.seconds = 0;
 
             if (b1 == BUTTON_ON) {
                 b1 = BUTTON_OFF;
@@ -227,9 +232,9 @@ void processState(void) {
                 timeBuffer.seconds = 0;
                 timeBuffer.minutes = 0;
                 timeBuffer.hours   = 0;
-                // do other cleanup?
 
                 stateBuffer.logic = STATE_LOGIC_COUNT;
+                timeBuffer.count_dir = COUNT_UP;
             }
             break;
         default:
