@@ -33,6 +33,7 @@
 #define FLASH_ON				0
 #define FLASH_OFF				1
 
+#define FLASH_RATE_VERY_FAST	25
 #define FLASH_RATE_FAST			50
 #define FLASH_RATE_SLOW 		125
 #define FLASH_RATE_VERY_SLOW 	250

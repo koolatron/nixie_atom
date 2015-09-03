@@ -1,3 +1,5 @@
+#include <stdlib.h>
+
 #include <avr/io.h>
 #include <avr/wdt.h>
 #include <avr/pgmspace.h>
@@ -31,9 +33,15 @@
 #define STATE_LOGIC_NOT_LOCKED		0
 #define STATE_LOGIC_COUNT           1
 #define STATE_LOGIC_SET             2
+#define STATE_LOGIC_SLOTMACHINE		3
 
 #define STATE_LOCK_TRUE             5
 #define STATE_LOCK_FALSE            6
+
+#define UPDATE_RATE_VERY_FAST		25
+#define UPDATE_RATE_FAST			62
+#define UPDATE_RATE_SLOW			150
+#define UPDATE_RATE_VERY_SLOW		250
 
 #define BUTTON_ON                   0
 #define BUTTON_OFF                  25		// button delay in ms/4
@@ -42,6 +50,9 @@ typedef struct {
 	uint8_t logic;
 	uint8_t buttons;
 	uint8_t lock;
+
+	uint8_t update_rate;
+	uint8_t update_rate_counter;
 } state_buf_t;
 
 void processButtons(void);

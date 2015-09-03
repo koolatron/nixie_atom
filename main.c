@@ -57,8 +57,6 @@ int main(void) {
         if (serviceUpdate) {
             serviceUpdate = 0;
 
-            tick(&timeBuffer);
-
             // Ticks at 1Hz via external interrupt
             if (timeUpdate) {
                 timeUpdate = 0;
@@ -67,10 +65,9 @@ int main(void) {
                 LEDs_ToggleLEDs(LEDS_LED2);
             }
 
+            tick(&timeBuffer);
             processButtons();
             processState();
-
-            displayTime(&displayBuffer, &timeBuffer);
             processDisplay(&displayBuffer);
         }
 
@@ -82,6 +79,8 @@ int main(void) {
 void initState(state_buf_t* stateBuffer) {
   stateBuffer->logic = STATE_LOGIC_NOT_LOCKED;
   stateBuffer->lock = STATE_LOCK_FALSE;
+  stateBuffer->update_rate = UPDATE_RATE_FAST;
+  stateBuffer->update_rate_counter = 0;
 }
 
 /** Configures the board hardware and chip peripherals. */
@@ -180,6 +179,14 @@ void processState(void) {
                 b3 = BUTTON_OFF;
                 stateBuffer.logic = STATE_LOGIC_SET;
             }
+
+            if (timeBuffer.count_dir == COUNT_DOWN) {
+                if ((timeBuffer.hours   == 0) &&
+                    (timeBuffer.minutes == 0) &&
+                    (timeBuffer.seconds == 0)) {
+                        stateBuffer.logic = STATE_LOGIC_SLOTMACHINE;
+                    }
+            }
             break;
         case STATE_LOGIC_SET:
             disableCount(&timeBuffer);
@@ -189,20 +196,47 @@ void processState(void) {
 
             if (b1 == BUTTON_ON) {
                 b1 = BUTTON_OFF;
-                nextMinute(&timeBuffer);
+                nextHour(&timeBuffer);
             }
             if (b2 == BUTTON_ON) {
                 b2 = BUTTON_OFF;
-                nextHour(&timeBuffer);
+                nextMinute(&timeBuffer);
             }
             if (b3 == BUTTON_ON) {
                 b3 = BUTTON_OFF;
                 stateBuffer.logic = STATE_LOGIC_COUNT;
             }
             break;
+        case STATE_LOGIC_SLOTMACHINE:
+            disableCount(&timeBuffer);
+
+            displayBuffer.flash = FLASH_OFF;
+            stateBuffer.update_rate_counter++;
+
+            if ((stateBuffer.update_rate_counter % stateBuffer.update_rate) == 0) {
+                stateBuffer.update_rate_counter = 0;
+
+                timeBuffer.seconds = rand() % 100;
+                timeBuffer.minutes = rand() % 100;
+                timeBuffer.hours   = rand() % 100;
+            }
+
+            if (b3 == BUTTON_ON) {
+                b3 = BUTTON_OFF;
+
+                timeBuffer.seconds = 0;
+                timeBuffer.minutes = 0;
+                timeBuffer.hours   = 0;
+                // do other cleanup?
+
+                stateBuffer.logic = STATE_LOGIC_COUNT;
+            }
+            break;
         default:
             break;
     }
+
+    displayTime(&displayBuffer, &timeBuffer);
 }
 
 inline uint8_t isLocked(void) {
