@@ -65,14 +65,14 @@ int main(void) {
                 LEDs_ToggleLEDs(LEDS_LED2);
             }
 
-            tick(&timeBuffer);
-
 #ifndef CLOCK_SOURCE_EXT
-            if (timeBuffer.ticks == TICKS_PER_SEC) {
-                timeBuffer.ticks = 0;
+            // tick() will set timeBuffer.ticks to 0 when it reaches TICKS_PER_SEC
+            if (timeBuffer.ticks == 0) {
                 timeUpdate = 1;
             }
 #endif // CLOCK_SOURCE_EXT
+
+            tick(&timeBuffer);
 
             processButtons();
             processState();

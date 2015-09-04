@@ -18,7 +18,7 @@
 #include <LUFA/Drivers/USB/USB.h>
 #include <LUFA/Platform/Platform.h>
 
-#define CLOCK_SOURCE_EXT			// Comment out to use internal clock source
+//#define CLOCK_SOURCE_EXT			// Comment out to use internal clock source
 
 #define FLASH_SIZE_BYTES            0x8000
 #define BOOTLOADER_SEC_SIZE_BYTES   0x1000
@@ -38,7 +38,7 @@
 #define STATE_LOCK_TRUE             5
 #define STATE_LOCK_FALSE            6
 
-#define UPDATE_RATE_VERY_FAST		40
+#define UPDATE_RATE_VERY_FAST		27		// rates in ms/4 (100 = 400ms delay)
 #define UPDATE_RATE_FAST			62
 #define UPDATE_RATE_SLOW			150
 #define UPDATE_RATE_VERY_SLOW		250
