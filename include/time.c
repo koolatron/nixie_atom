@@ -52,7 +52,6 @@ void processTime(time_buf_t* time) {
             return;
 
         time->seconds--;
-        time->ticks = 0;
 
         if (time->seconds >= 60) {
             time->minutes--;

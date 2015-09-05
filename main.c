@@ -231,7 +231,6 @@ void processState(void) {
             if ((stateBuffer.update_rate_counter % stateBuffer.update_rate) == 0) {
                 stateBuffer.update_rate_counter = 0;
 
-                // can probably get better randomness than this
                 timeBuffer.seconds = rand8() % 100;
                 timeBuffer.minutes = rand8() % 100;
                 timeBuffer.hours   = rand8() % 100;
