@@ -232,9 +232,9 @@ void processState(void) {
                 stateBuffer.update_rate_counter = 0;
 
                 // can probably get better randomness than this
-                timeBuffer.seconds = rand() % 100;
-                timeBuffer.minutes = rand() % 100;
-                timeBuffer.hours   = rand() % 100;
+                timeBuffer.seconds = rand8() % 100;
+                timeBuffer.minutes = rand8() % 100;
+                timeBuffer.hours   = rand8() % 100;
             }
 
             if (b3 == BUTTON_ON) {
@@ -262,6 +262,31 @@ inline uint8_t isLocked(void) {
     }
 #endif // CLOCK_SOURCE_EXT
     return 1;
+}
+
+/** simple LFSR-based PRNG that's faster and smaller than rand()
+    Using this shaves off about 400 bytes of program code
+*/
+uint8_t rand8(void) {
+    static uint8_t state[RNG_STATE_BYTES] =
+        { 0x87, 0xdd, 0xdc, 0x10, 0x35, 0xbc, 0x5c, 0xb6, 0xca, 0x0a };
+    static uint16_t c = 0x42;
+    static uint8_t  i = 0;
+    uint16_t t;
+    uint8_t x;
+
+    x = state[i];
+    t = (uint16_t)x * RNG_MULT_LO + c;
+    c = t >> 8;
+#if RNG_MULT_HI
+    c += x;
+#endif
+    x = t & 255;
+    state[i] = x;
+    if (++i >= sizeof(state))
+        i = 0;
+
+    return x;
 }
 
 /** Timer interrupt triggers every 4ms */

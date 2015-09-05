@@ -1,5 +1,3 @@
-#include <stdlib.h>
-
 #include <avr/io.h>
 #include <avr/wdt.h>
 #include <avr/pgmspace.h>
@@ -46,6 +44,11 @@
 #define BUTTON_ON                   0
 #define BUTTON_OFF                  25		// button delay in ms/4
 
+#define RNG_STATE_BYTES 			10
+#define RNG_MULT 					0x153
+#define RNG_MULT_LO					(RNG_MULT & 255)
+#define RNG_MULT_HI					(RNG_MULT & 256)
+
 typedef struct {
 	uint8_t logic;
 	uint8_t buttons;
@@ -58,6 +61,7 @@ typedef struct {
 void processButtons(void);
 void processState(void);
 inline uint8_t isLocked(void);
+uint8_t rand8(void);
 
 /** The ATTR_INIT_SECTION(3) decoration causes gcc to place this function in the .init3 section,
  *  which runs before main but after the stack is initialized.
